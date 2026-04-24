@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Track {
+  id                   String               @id @default(uuid()) @db.Uuid
+  name                 String               @unique
+  pathway              String
+  SubjectCombinations  SubjectCombination[]
+
+  @@map("tracks")
+}
+
+model Subject {
+  id                   String               @id @default(uuid()) @db.Uuid
+  name                 String               @unique
+  Combinations         SubjectCombination[] @relation("CombinationSubjects")
+
+  @@map("subjects")
+}
+
+model SubjectCombination {
+  id                   String               @id @default(uuid()) @db.Uuid
+  code                 String
+  trackId              String               @db.Uuid
+  track                Track                @relation(fields: [trackId], references: [id])
+  Subjects             Subject[]            @relation("CombinationSubjects")
+  Schools              School[]             @relation("CombinationSchools")
+
+  @@map("subject_combinations")
+}
+
+model School {
+  id                   String               @id // SHA256 of name+county+cluster
+  name                 String
+  county               String
+  cluster              String
+  gender               String
+  category             String
+  accommodationType    String               @map("accommodation_type")
+  Combinations         SubjectCombination[] @relation("CombinationSchools")
+
+  @@map("schools")
+}
