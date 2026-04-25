@@ -23,3 +23,15 @@ export const getCombinationsBySchoolParamsSchema = z.object({
 export const getCombinationsBySubjectsQuerySchema = z.object({
   subjects: z.string().min(1, "Subjects parameter is required (comma-separated)"),
 });
+
+export const recommendationRequestSchema = z
+  .object({
+    // The subjects the student is good at or interested in
+    preferredSubjects: z.array(z.string().transform(s => s.toUpperCase())).min(1),
+    // Optional filters to narrow down the schools
+    preferredCounty: z.string().optional(),
+    preferredCategory: z.string().optional(), // e.g., "National", "Extra County"
+  })
+  .strict();
+
+export type RecommendationRequest = z.infer<typeof recommendationRequestSchema>;
