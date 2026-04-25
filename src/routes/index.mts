@@ -1,8 +1,9 @@
-import { Application } from 'express';
-import { getSchoolsController, getCombinationsBySchoolController, getCombinationsBySubjectsController } from '../controllers/schools.mjs';
+import { Router } from "express";
+import { getCombinationsBySchoolController, getCombinationsBySubjectsController, getSchoolsController } from "../controllers/schools.mjs";
 
-export const routes = (app: Application) => {
-  app.get('/schools', getSchoolsController);
-  app.get('/schools/:name/combinations', getCombinationsBySchoolController);
-  app.get('/combinations/by-subjects', getCombinationsBySubjectsController);
-};
+const routes = Router();
+routes.get("/schools", getSchoolsController);
+routes.get("/schools/:name/combinations", getCombinationsBySchoolController);
+routes.get("/combinations/by-subjects", getCombinationsBySubjectsController);
+
+export { routes };

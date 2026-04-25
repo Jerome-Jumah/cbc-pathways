@@ -4,9 +4,10 @@ import { dirname, join } from "node:path";
 
 import { routes } from "./routes/index.mjs";
 import { fileURLToPath } from "node:url";
-import { HttpErrorHandler, STATUS_CODES } from './constants/index.mjs';
-import logger from './constants/logger.mjs';
-import { rateLimiterMiddleware } from './middleware/rate-limiter.mjs';
+import { HttpErrorHandler, STATUS_CODES } from "./constants/index.mjs";
+import logger from "./constants/logger.mjs";
+import { rateLimiterMiddleware } from "./middleware/rate-limiter.mjs";
+import { ZodError } from "zod";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -15,9 +16,11 @@ const app = express();
 app.set("trust proxy", 1);
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : [];
-app.use(cors({
-  origin: process.env.NODE_ENV === "production" ? allowedOrigins : "*"
-}));
+app.use(
+  cors({
+    origin: process.env.NODE_ENV === "production" ? allowedOrigins : "*",
+  }),
+);
 
 app.use(json());
 
@@ -42,11 +45,11 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
   let message = "";
   let issues: any;
   let statusCode: number = STATUS_CODES.INTERNAL_SERVER_ERROR;
-  //   if (err instanceof ZodError) {
-  //     message = "Validation failed";
-  //     issues = err.errors;
-  //     statusCode = STATUS_CODES.BAD_REQUEST;
-  //   }
+  if (err instanceof ZodError) {
+    message = "Validation failed";
+    issues = err.issues;
+    statusCode = STATUS_CODES.BAD_REQUEST;
+  }
 
   if (err instanceof HttpErrorHandler) {
     message = err.message;
@@ -58,6 +61,7 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
 
   res.status(statusCode).json({ error: { message, issues } });
 });
+
 async function start() {
   app.listen(process.env.PORT || 8080, async () => {
     logger.info("Server is up and running on port " + (process.env.PORT || 8080));
