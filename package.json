@@ -11,7 +11,8 @@
     "bld-ui": "rimraf dist/public && cd ui && yarn install --network-timeout 100000 && yarn build && mv ./dist ../dist/public",
     "build": " yarn bld-api && yarn bld-ui",
     "postinstall": "prisma generate --schema ./prisma/schema.prisma",
-    "ingest": "tsx src/run-ingestion.mts"
+    "ingest": "tsx src/run-ingestion.mts",
+    "integrity": "tsx src/check-integrity.mts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
