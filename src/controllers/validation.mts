@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { runDataValidationHandler } from "../handlers/data-validation.mjs";
 
-export async function runValidationController(req: Request, res: Response, next: NextFunction) {
+export async function runValidation(req: Request, res: Response, next: NextFunction) {
   try {
     const result = await runDataValidationHandler();
 

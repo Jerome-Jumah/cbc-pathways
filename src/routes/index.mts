@@ -1,11 +1,13 @@
 import { Router } from "express";
-import { getCombinationsBySchoolController, getCombinationsBySubjectsController, getSchoolsController } from "../controllers/schools.mjs";
-import { runValidationController } from "../controllers/validation.mjs";
+import { getCombinationsBySchool, getCombinationsBySubjects, getSchools } from "../controllers/schools.mjs";
+import { runValidation } from "../controllers/validation.mjs";
+import { getRecommendations } from "../controllers/recommendation.mjs";
 
 const routes = Router();
-routes.get("/schools", getSchoolsController);
-routes.get("/schools/:name/combinations", getCombinationsBySchoolController);
-routes.get("/combinations/by-subjects", getCombinationsBySubjectsController);
-routes.get("/debug/validation", runValidationController);
+routes.get("/schools", getSchools);
+routes.get("/schools/:name/combinations", getCombinationsBySchool);
+routes.get("/combinations/by-subjects", getCombinationsBySubjects);
+routes.get("/debug/validation", runValidation);
+routes.post("/recommendations", getRecommendations);
 
 export { routes };
