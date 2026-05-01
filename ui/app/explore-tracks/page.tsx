@@ -107,7 +107,7 @@ export default function ExploreTracksPage() {
     <div className="min-h-screen bg-slate-50/50 font-sans flex flex-col items-center">
       <NavBar />
       
-      <main className="w-full max-w-[1400px] px-6 py-8 flex flex-col gap-12 mt-4">
+      <main className="w-full max-w-[1400px] px-4 md:px-6 py-4 md:py-8 flex flex-col gap-12 mt-4 pb-24">
         
         {/* Hero Section */}
         <section className="flex flex-col lg:flex-row justify-between items-center gap-12 relative">

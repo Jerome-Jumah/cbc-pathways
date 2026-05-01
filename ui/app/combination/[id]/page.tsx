@@ -127,7 +127,7 @@ export default function CombinationDetailsPage({ params }: { params: { id: strin
         </div>
       </div>
       
-      <main className="w-full max-w-[1400px] px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="w-full max-w-[1400px] px-4 md:px-6 py-4 md:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 pb-24">
         
         {/* LEFT COLUMN */}
         <div className="lg:col-span-3 flex flex-col gap-6">

@@ -69,20 +69,20 @@ export default function Home() {
       <main className="w-full max-w-7xl px-8 flex flex-col items-center pb-24">
         
         {/* Hero Section */}
-        <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-8 pb-0 items-end">
-          <div className="flex flex-col items-start z-10 pb-16">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none px-4 py-1.5 text-sm font-medium rounded-full">
+        <section className="w-full flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-12 pt-4 lg:pt-8 pb-0 lg:items-end">
+          <div className="flex flex-col items-start z-10 pb-0 lg:pb-16">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none px-4 py-1.5 text-xs lg:text-sm font-medium rounded-full mb-4 lg:mb-0">
               CBC Made Simple
             </Badge>
-            <h1 className="text-[3.5rem] font-extrabold text-slate-900 leading-[1.1] tracking-tight mt-8">
-              Find the <span className="text-blue-600">best</span> subject<br />
-              combination and schools<br />
-              <span className="text-blue-600">for you</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-slate-900 leading-[1.15] lg:leading-[1.1] tracking-tight lg:mt-8">
+              Find the <span className="text-blue-600">best</span> subject<br className="hidden lg:block" />
+              combination and schools<br className="hidden lg:block" />
+              <span className="text-blue-600"> for you</span>
             </h1>
-            <p className="text-slate-600 mt-6 text-lg max-w-[480px] leading-relaxed">
+            <p className="text-slate-600 mt-4 lg:mt-6 text-base lg:text-lg max-w-[480px] leading-relaxed">
               Explore 500+ combinations and 10,000+ schools across Kenya aligned to the CBC pathway.
             </p>
-            <div className="flex gap-4 mt-10">
+            <div className="hidden lg:flex gap-4 mt-10">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-7 text-base shadow-sm font-semibold">
                 <HugeiconsIcon icon={Search01Icon} size={20} className="mr-2 stroke-[2.5]" /> 
                 Find Schools
@@ -94,53 +94,53 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="relative w-full h-[550px] flex items-end justify-center">
+          <div className="relative w-full h-[350px] sm:h-[450px] lg:h-[550px] flex items-end justify-center mt-2 lg:mt-0">
             {/* Background decorative blob */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] bg-blue-100/50 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[400px] lg:w-[600px] h-[300px] sm:h-[400px] lg:h-[500px] bg-blue-100/50 rounded-full blur-3xl -z-10"></div>
             
             {/* Main Illustration */}
-            <div className="relative w-full max-w-[550px] h-full translate-y-4">
+            <div className="relative w-full max-w-[550px] h-full lg:translate-y-4">
               <Image 
                 src="/hero-image.png" 
                 alt="Students exploring options" 
                 fill
-                className="object-contain"
+                className="object-contain object-bottom lg:object-center"
                 priority
               />
             </div>
 
             {/* Floating Badges */}
-            <Card className="absolute top-12 right-0 flex flex-row items-center gap-4 p-3 pr-6 rounded-2xl shadow-lg border-white/40 bg-white/90 backdrop-blur-sm whitespace-nowrap">
-              <div className="bg-blue-600 p-2.5 rounded-xl text-white">
-                <HugeiconsIcon icon={School01Icon} size={24} />
+            <Card className="absolute top-4 lg:top-12 right-0 flex flex-row items-center gap-3 lg:gap-4 p-2 lg:p-3 pr-4 lg:pr-6 rounded-xl lg:rounded-2xl shadow-lg border-white/40 bg-white/90 backdrop-blur-sm whitespace-nowrap scale-75 lg:scale-100 origin-top-right">
+              <div className="bg-blue-600 p-2 lg:p-2.5 rounded-lg lg:rounded-xl text-white">
+                <HugeiconsIcon icon={School01Icon} size={20} className="lg:w-6 lg:h-6" />
               </div>
               <div className="flex flex-col">
-                <p className="font-bold text-lg leading-tight text-slate-900">10,000+</p>
-                <p className="text-xs text-slate-500 font-medium">Schools</p>
+                <p className="font-bold text-base lg:text-lg leading-tight text-slate-900">10,000+</p>
+                <p className="text-[10px] lg:text-xs text-slate-500 font-medium">Schools</p>
               </div>
             </Card>
 
-            <Card className="absolute bottom-16 -right-4 flex flex-row items-center gap-4 p-3 pr-6 rounded-2xl shadow-lg border-white/40 bg-white/90 backdrop-blur-sm whitespace-nowrap">
-              <div className="bg-emerald-600 p-2.5 rounded-xl text-white">
-                <HugeiconsIcon icon={Book02Icon} size={24}  />
+            <Card className="absolute bottom-6 lg:bottom-16 -right-2 lg:-right-4 flex flex-row items-center gap-3 lg:gap-4 p-2 lg:p-3 pr-4 lg:pr-6 rounded-xl lg:rounded-2xl shadow-lg border-white/40 bg-white/90 backdrop-blur-sm whitespace-nowrap scale-75 lg:scale-100 origin-bottom-right">
+              <div className="bg-emerald-600 p-2 lg:p-2.5 rounded-lg lg:rounded-xl text-white">
+                <HugeiconsIcon icon={Book02Icon} size={20} className="lg:w-6 lg:h-6" />
               </div>
               <div className="flex flex-col">
-                <p className="font-bold text-lg leading-tight text-slate-900">500+</p>
-                <p className="text-xs text-slate-500 font-medium">Combinations</p>
+                <p className="font-bold text-base lg:text-lg leading-tight text-slate-900">500+</p>
+                <p className="text-[10px] lg:text-xs text-slate-500 font-medium">Combinations</p>
               </div>
             </Card>
 
-            <Card className="absolute top-1/2 -left-8 -translate-y-1/2 flex flex-row items-center gap-4 p-3 pr-6 rounded-2xl shadow-lg border-white/40 bg-white/90 backdrop-blur-sm whitespace-nowrap">
-              <div className="bg-indigo-500 p-2.5 rounded-xl text-white flex items-center justify-center">
-                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <Card className="absolute top-1/2 -left-2 lg:-left-8 -translate-y-1/2 flex flex-row items-center gap-3 lg:gap-4 p-2 lg:p-3 pr-4 lg:pr-6 rounded-xl lg:rounded-2xl shadow-lg border-white/40 bg-white/90 backdrop-blur-sm whitespace-nowrap scale-75 lg:scale-100 origin-left">
+              <div className="bg-indigo-500 p-2 lg:p-2.5 rounded-lg lg:rounded-xl text-white flex items-center justify-center">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="lg:w-6 lg:h-6">
                     <path d="M12 4L4 8L12 12L20 8L12 4Z" fill="currentColor"/>
                     <path d="M4 12L12 16L20 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M4 16L12 20L20 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                  </svg>
               </div>
               <div className="flex flex-col">
-                <p className="font-bold text-lg leading-tight text-slate-900">7</p>
-                <p className="text-xs text-slate-500 font-medium">Tracks</p>
+                <p className="font-bold text-base lg:text-lg leading-tight text-slate-900">7</p>
+                <p className="text-[10px] lg:text-xs text-slate-500 font-medium">Tracks</p>
               </div>
             </Card>
           </div>

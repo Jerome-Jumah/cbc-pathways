@@ -24,6 +24,8 @@ export const metadata: Metadata = {
  
 };
 
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,6 +35,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${fontSans.variable} ${fontSerif.variable} antialiased`}>
         {children}
+        <MobileBottomNav />
       </body>
     </html>
   );

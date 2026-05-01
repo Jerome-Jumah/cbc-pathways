@@ -4,6 +4,7 @@ import { NavBar } from "@/components/nav-bar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
@@ -19,6 +20,7 @@ import {
   GlobalIcon,
   HelpCircleIcon,
   Home01Icon,
+  Menu01Icon,
   Layers01Icon, Mortarboard01Icon,
   Plant01Icon,
   RouteIcon,
@@ -112,10 +114,10 @@ export default function TrackCombinationsPage({ params }: { params: { id: string
     <div className="min-h-screen bg-[#fafafa] font-sans flex flex-col items-center pb-20">
       <NavBar />
       
-      <main className="w-full max-w-[1400px] px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="w-full max-w-[1400px] px-4 md:px-6 py-4 md:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 pb-24">
         
         {/* LEFT COLUMN - Housed in a Card */}
-        <Card className="lg:col-span-3 flex flex-col p-6 rounded-xl shadow-sm border-slate-200 bg-white h-fit gap-8">
+        <Card className="hidden lg:flex lg:col-span-3 flex-col p-6 rounded-xl shadow-sm border-slate-200 bg-white h-fit gap-8">
           
           <div className="flex flex-col gap-4">
             <Link href="/explore-tracks" className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-2">
@@ -165,6 +167,68 @@ export default function TrackCombinationsPage({ params }: { params: { id: string
 
         {/* CENTER COLUMN - Housed in a Card */}
         <Card className="lg:col-span-6 flex flex-col p-6 sm:p-8 rounded-xl shadow-sm border-slate-200 bg-white h-fit">
+          
+          {/* Mobile Sidebar Triggers */}
+          <div className="flex lg:hidden w-full items-center justify-between mb-6">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <HugeiconsIcon icon={Menu01Icon} size={16} />
+                  Categories
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px] p-6 overflow-y-auto">
+                <div className="flex flex-col gap-4 mt-6">
+                  <Link href="/explore-tracks" className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-2">
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={16} className="mr-2" /> Back to Tracks
+                  </Link>
+                  <div className="flex flex-col gap-1">
+                    {MENU_ITEMS.map((item, idx) => (
+                      <button 
+                        key={idx}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left leading-snug",
+                          item.active 
+                            ? "bg-slate-100/80 text-blue-600" 
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                        )}
+                      >
+                        <HugeiconsIcon icon={item.icon} size={20} className={item.active ? "text-blue-600" : "text-slate-400"} />
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+            
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  Pathways
+                  <HugeiconsIcon icon={Menu01Icon} size={16} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] p-6 overflow-y-auto">
+                <div className="flex flex-col mt-6">
+                  <div className="flex flex-col mb-4">
+                    <h3 className="text-lg font-bold text-slate-900">Leading to Pathways</h3>
+                    <p className="text-sm text-slate-500 font-medium">Careers under Pure Sciences</p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {PATHWAYS.map((pathway, idx) => (
+                      <button key={idx} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 group transition-colors text-left">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all shrink-0">
+                          <HugeiconsIcon icon={pathway.icon} size={20} className={pathway.color} />
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">{pathway.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
           
           {/* Hero Banner - Border radius reduced to xl */}
           <div className="relative overflow-hidden w-full rounded-xl border border-blue-100 bg-[#f8fbff] p-8 mb-8">
@@ -338,7 +402,7 @@ export default function TrackCombinationsPage({ params }: { params: { id: string
         </Card>
 
         {/* RIGHT COLUMN - Housed in a Card with Separators */}
-        <Card className="lg:col-span-3 flex flex-col p-6 rounded-xl shadow-sm border-slate-200 bg-white h-fit gap-6">
+        <Card className="hidden lg:flex lg:col-span-3 flex-col p-6 rounded-xl shadow-sm border-slate-200 bg-white h-fit gap-6">
           
           {/* About Track */}
           <div className="flex flex-col">
