@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { HeartAddIcon, Menu01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from 'next/image'
@@ -57,6 +57,7 @@ export function NavBar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="flex flex-col gap-8 mt-10">
                 <div className="flex items-center gap-4 px-4 py-2 bg-slate-50 rounded-xl">
                   <Avatar>
