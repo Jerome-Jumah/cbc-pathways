@@ -1,0 +1,39 @@
+// For adding custom fonts with other frameworks, see:
+// https://tailwindcss.com/docs/font-family
+import type { Metadata } from "next";
+import { Inter, } from "next/font/google";
+import localFont from 'next/font/local'
+const georgia = localFont({ 
+  src: './georgia-2/georgia.ttf',
+  variable: '--font-georgia'
+}) // Ensure file exists
+
+import "./globals.css";
+
+const fontSans = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const fontSerif = georgia
+
+
+export const metadata: Metadata = {
+  title: "Mwalimu - CBC Intelligence",
+  description: "Your guide to CBC curriculum and career paths",
+ 
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={`${fontSans.variable} ${fontSerif.variable} antialiased`}>
+        {children}
+      </body>
+    </html>
+  );
+}
