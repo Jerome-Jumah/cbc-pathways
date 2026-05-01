@@ -137,9 +137,10 @@ export default function ExploreTracksPage() {
              {/* Using a placeholder for the 3D graduation cap illustration */}
              <div className="absolute top-0 right-0 w-full h-full bg-blue-50/50 rounded-[3rem] -z-10 blur-3xl opacity-50"></div>
              <Image 
-                src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop"
-                alt="Education illustration placeholder"
-                fill
+                src="/stack-book.png"
+                alt="Stacked books"
+                width={400}
+                height={400}
                 className="object-cover rounded-3xl shadow-sm mix-blend-multiply opacity-90"
              />
           </div>

@@ -1,30 +1,27 @@
 "use client"
 
-import React from "react"
 import { NavBar } from "@/components/nav-bar"
-import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import Image from "next/image"
-import Link from "next/link"
+import { Card } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import {
   ArrowRight01Icon,
-  Book01Icon,
   Briefcase02Icon,
   Building03Icon,
   CheckmarkCircle01Icon,
   FavouriteIcon,
   Mortarboard01Icon,
-  Plant01Icon,
+  QuoteUpIcon,
   RouteIcon,
   Search01Icon,
   Settings01Icon,
   Target01Icon,
-  UserGroupIcon,
-  QuoteUpIcon
+  UserGroupIcon
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { cn } from "@/lib/utils"
+import Image from "next/image"
+import Link from "next/link"
 
 const FEATURES = [
   {
@@ -144,7 +141,7 @@ export default function AboutPage() {
             {/* Main Image */}
             <div className="relative w-full max-w-[500px] aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border-4 border-white z-10">
                <Image 
-                 src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop" 
+                 src="/about-hero-image.png" 
                  fill 
                  alt="Students studying together" 
                  className="object-cover"
@@ -205,8 +202,9 @@ export default function AboutPage() {
                 <div className="relative w-48 h-48">
                    <div className="absolute inset-0 bg-blue-200 rounded-full blur-2xl opacity-50"></div>
                    <Image 
-                     src="https://images.unsplash.com/photo-1614064641913-6b71f301683b?q=80&w=400&auto=format&fit=crop" 
-                     fill 
+                     src="/about-shield-desc.png" 
+                     width={650}
+                     height={650}
                      alt="Security Shield" 
                      className="object-cover rounded-3xl shadow-xl z-10 border-4 border-white"
                    />

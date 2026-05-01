@@ -1,15 +1,9 @@
 "use client"
 
-import React, { useState } from "react"
 import { NavBar } from "@/components/nav-bar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import {
   Command,
   CommandEmpty,
@@ -20,12 +14,17 @@ import {
 } from "@/components/ui/command"
 import { MultiSelect, Option } from "@/components/ui/multi-select"
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import {
   ArrowDown01Icon,
   ArrowRight01Icon,
   ArrowUp01Icon,
   Book01Icon,
   Book02Icon,
-  Cancel01Icon,
   Compass01Icon,
   FilterIcon,
   School01Icon,
@@ -37,7 +36,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
-import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 const SUBJECT_OPTIONS: Option[] = [
   { label: "Biology", value: "biology" },
@@ -102,7 +101,7 @@ export default function Home() {
             {/* Main Illustration */}
             <div className="relative w-full max-w-[550px] h-full translate-y-4">
               <Image 
-                src="/students.png" 
+                src="/hero-image.png" 
                 alt="Students exploring options" 
                 fill
                 className="object-contain"
