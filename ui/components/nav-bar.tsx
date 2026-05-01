@@ -1,11 +1,18 @@
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+"use client"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { HeartAddIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 export function NavBar() {
+  const pathname = usePathname()
+  
+  const isActive = (href: string) => pathname === href
+
   return (
     <div className="w-full px-6 pt-6">
       <header className="flex h-20 w-full items-center justify-between px-8 bg-white rounded-2xl shadow-sm border border-slate-100 max-w-[1400px] mx-auto">
@@ -20,11 +27,11 @@ export function NavBar() {
         </div>
 
         <nav className="hidden md:flex h-full items-center gap-8 text-sm font-semibold text-zinc-500">
-          <Link href="#" className="h-full flex items-center text-blue-600 border-b-[3px] border-blue-600 pt-[3px]">Home</Link>
-          <Link href="#" className="h-full flex items-center hover:text-slate-900 border-b-[3px] border-transparent pt-[3px]">Explore Tracks</Link>
-          <Link href="#" className="h-full flex items-center hover:text-slate-900 border-b-[3px] border-transparent pt-[3px]">Find Schools</Link>
-          <Link href="#" className="h-full flex items-center hover:text-slate-900 border-b-[3px] border-transparent pt-[3px]">Recommendations</Link>
-          <Link href="#" className="h-full flex items-center hover:text-slate-900 border-b-[3px] border-transparent pt-[3px]">About</Link>
+          <Link href="/" className={cn("h-full flex items-center border-b-[3px] pt-[3px] transition-colors", isActive("/") ? "text-blue-600 border-blue-600" : "hover:text-slate-900 border-transparent")}>Home</Link>
+          <Link href="/explore-tracks" className={cn("h-full flex items-center border-b-[3px] pt-[3px] transition-colors", isActive("/explore-tracks") ? "text-blue-600 border-blue-600" : "hover:text-slate-900 border-transparent")}>Explore Tracks</Link>
+          <Link href="/find-schools" className={cn("h-full flex items-center border-b-[3px] pt-[3px] transition-colors", isActive("/find-schools") ? "text-blue-600 border-blue-600" : "hover:text-slate-900 border-transparent")}>Find Schools</Link>
+          <Link href="/recommendations" className={cn("h-full flex items-center border-b-[3px] pt-[3px] transition-colors", isActive("/recommendations") ? "text-blue-600 border-blue-600" : "hover:text-slate-900 border-transparent")}>Recommendations</Link>
+          <Link href="/about" className={cn("h-full flex items-center border-b-[3px] pt-[3px] transition-colors", isActive("/about") ? "text-blue-600 border-blue-600" : "hover:text-slate-900 border-transparent")}>About</Link>
         </nav>
 
         <div className="flex items-center gap-6">
