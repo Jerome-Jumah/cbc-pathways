@@ -7,6 +7,7 @@ import { HeartAddIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Image from 'next/image'
 
 export function NavBar() {
   const pathname = usePathname()
@@ -16,15 +17,16 @@ export function NavBar() {
   return (
     <div className="w-full px-6 pt-6">
       <header className="flex h-20 w-full items-center justify-between px-8 bg-white rounded-2xl shadow-sm border border-slate-100 max-w-[1400px] mx-auto">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center rounded-lg bg-blue-600 p-1.5 w-10 h-10">
-            <span className="text-xl font-bold text-white tracking-tighter">M</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold leading-tight">Mwalimu</span>
-            <span className="text-xs text-zinc-500 leading-tight">Your CBC Guide</span>
-          </div>
-        </div>
+        <Link href="/" className="flex items-center">
+          <Image 
+            src="/logo.png" 
+            alt="Mwalimu Logo" 
+            width={140} 
+            height={140} 
+            className="h-10 w-auto object-contain"
+            priority
+          />
+        </Link>
 
         <nav className="hidden md:flex h-full items-center gap-8 text-sm font-semibold text-zinc-500">
           <Link href="/" className={cn("h-full flex items-center border-b-[3px] pt-[3px] transition-colors", isActive("/") ? "text-blue-600 border-blue-600" : "hover:text-slate-900 border-transparent")}>Home</Link>
