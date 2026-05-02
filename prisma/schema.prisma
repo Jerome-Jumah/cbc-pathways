@@ -50,8 +50,10 @@ model School {
   gender            String
   category          String
   accommodationType String               @map("accommodation_type")
-  Combinations      SubjectCombination[] @relation("CombinationSchools")
+  Combinations      SubjectCombination[]    @relation("CombinationSchools")
   profile           SchoolProfile?
+  enrichmentJob     SchoolEnrichmentJob?
+  sourceCandidates  SchoolSourceCandidate[]
 
   @@map("schools")
 }
@@ -115,4 +117,40 @@ model CombinationProfile {
   combination SubjectCombination @relation(fields: [combinationId], references: [id], onDelete: Cascade)
 
   @@map("combination_profiles")
+}
+
+model SchoolEnrichmentJob {
+  id          String    @id @default(uuid()) @db.Uuid
+  schoolId    String
+  status      String    @default("pending")
+  priority    Int       @default(5)
+  attempts    Int       @default(0)
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId])
+  @@map("school_enrichment_jobs")
+}
+
+model SchoolSourceCandidate {
+  id              String   @id @default(uuid()) @db.Uuid
+  schoolId        String
+  url             String
+  title           String?
+  snippet         String?
+  sourceType      String?
+  confidenceScore Float?
+  selected        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, url])
+  @@map("school_source_candidates")
 }

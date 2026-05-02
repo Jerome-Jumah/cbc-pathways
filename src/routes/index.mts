@@ -5,6 +5,13 @@ import { getSchoolProfileController, upsertSchoolProfileController } from "../co
 import { getCombinationsBySchool, getCombinationsBySubjects, getSchools } from "../controllers/schools.mjs";
 import { getAllTrackProfiles, getTrackProfileById } from "../controllers/track-profiles.mjs";
 import { runValidation } from "../controllers/validation.mjs";
+import {
+  createSchoolEnrichmentJobController,
+  listSchoolEnrichmentJobsController,
+  queueMissingProfilesController,
+  addSchoolSourceCandidateController,
+  listSchoolSourceCandidatesController,
+} from "../controllers/school-enrichment.controller.mjs";
 
 const routes = Router();
 routes.get("/schools", getSchools);
@@ -24,4 +31,14 @@ routes.get("/combinations/:combinationId/profile", getCombinationProfileControll
 routes.get("/schools/:schoolId/profile", getSchoolProfileController);
 routes.put("/schools/:schoolId/profile", upsertSchoolProfileController);
 
+// School Enrichment Queue
+routes.post("/schools/:schoolId/enrichment-job", createSchoolEnrichmentJobController);
+routes.get("/school-enrichment/jobs", listSchoolEnrichmentJobsController);
+routes.post("/school-enrichment/queue-missing", queueMissingProfilesController);
+
+// School Source Candidates
+routes.post("/schools/:schoolId/source-candidates", addSchoolSourceCandidateController);
+routes.get("/schools/:schoolId/source-candidates", listSchoolSourceCandidatesController);
+
 export { routes };
+
