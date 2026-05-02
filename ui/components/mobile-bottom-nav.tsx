@@ -41,7 +41,7 @@ export function MobileBottomNav() {
               isActive ? "text-blue-600" : "text-slate-400 hover:text-slate-600"
             )}
           >
-            <HugeiconsIcon icon={tab.icon} size={22} className={isActive ? "fill-current" : ""} />
+            <HugeiconsIcon icon={tab.icon} size={22} />
             <span className="text-[10px] font-semibold">{tab.label}</span>
           </Link>
         )

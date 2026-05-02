@@ -301,7 +301,7 @@ export default function FindSchoolsPage() {
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 flex flex-col">
                 <SheetTitle className="sr-only">Filters</SheetTitle>
-                <div className="flex-1 overflow-y-auto p-6 pt-12">
+                <div className="flex-1 overflow-y-auto p-6 pt-14">
                   <div className="flex flex-col gap-6">
                     {renderFilters()}
                   </div>

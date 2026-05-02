@@ -179,7 +179,7 @@ export default function TrackCombinationsPage({ params }: { params: { id: string
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0 flex flex-col">
                 <SheetTitle className="sr-only">Categories</SheetTitle>
-                <div className="flex-1 overflow-y-auto p-6 pt-12">
+                <div className="flex-1 overflow-y-auto p-6 pt-14">
                   <div className="flex flex-col gap-4">
                     <Link href="/explore-tracks" className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-2">
                       <HugeiconsIcon icon={ArrowLeft01Icon} size={16} className="mr-2" /> Back to Tracks
@@ -214,7 +214,7 @@ export default function TrackCombinationsPage({ params }: { params: { id: string
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0 flex flex-col">
                 <SheetTitle className="sr-only">Pathways</SheetTitle>
-                <div className="flex-1 overflow-y-auto p-6 pt-12">
+                <div className="flex-1 overflow-y-auto p-6 pt-14">
                   <div className="flex flex-col">
                     <div className="flex flex-col mb-4">
                       <h3 className="text-lg font-bold text-slate-900">Leading to Pathways</h3>
