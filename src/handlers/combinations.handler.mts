@@ -6,12 +6,18 @@ import { CombinationsByTrackQuery } from "../schemas/combinations.schema.mjs";
  * Returns combinations with their subjects and school count.
  */
 export async function getCombinationsHandler(filters: CombinationsByTrackQuery) {
-  const { trackId, trackName, page, limit } = filters;
+  const { trackId, trackName, track, subjects, page, limit } = filters;
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = {};
   if (trackId) where.trackId = trackId;
-  if (trackName) where.track = { name: { equals: trackName, mode: "insensitive" } };
+  const requestedTrack = trackName ?? track;
+  if (requestedTrack) where.track = { name: { equals: requestedTrack, mode: "insensitive" } };
+  if (subjects.length > 0) {
+    where.AND = subjects.map(subjectName => ({
+      Subjects: { some: { name: subjectName } },
+    }));
+  }
 
   const [total, combinations] = await Promise.all([
     prisma.subjectCombination.count({ where }),
