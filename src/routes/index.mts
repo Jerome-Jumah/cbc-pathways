@@ -5,6 +5,8 @@ import { getSchoolProfileController, upsertSchoolProfileController } from "../co
 import { getCombinationsBySchool, getCombinationsBySubjects, getSchools } from "../controllers/schools.mjs";
 import { getAllTrackProfiles, getTrackProfileById } from "../controllers/track-profiles.mjs";
 import { runValidation } from "../controllers/validation.mjs";
+import { getCombinations } from "../controllers/combinations.controller.mjs";
+import { getSchoolCombinations } from "../controllers/school-combinations.controller.mjs";
 import {
   createSchoolEnrichmentJobController,
   listSchoolEnrichmentJobsController,
@@ -15,21 +17,19 @@ import {
 
 const routes = Router();
 routes.get("/schools", getSchools);
-routes.get("/schools/:name/combinations", getCombinationsBySchool);
+routes.get("/schools/:schoolId/combinations", getSchoolCombinations);
+routes.get("/schools/:schoolId/profile", getSchoolProfileController);
+routes.put("/schools/:schoolId/profile", upsertSchoolProfileController);
+routes.get("/schools/:name/combinations-by-name", getCombinationsBySchool);
+routes.get("/combinations", getCombinations);
 routes.get("/combinations/by-subjects", getCombinationsBySubjects);
+routes.get("/combinations/:combinationId/profile", getCombinationProfileController);
 routes.get("/debug/validation", runValidation);
 routes.post("/recommendations", getRecommendations);
 
 // Track Profiles
 routes.get("/track-profiles", getAllTrackProfiles);
 routes.get("/track-profiles/:trackId", getTrackProfileById);
-
-// Combination Profiles (lazy generate + cache)
-routes.get("/combinations/:combinationId/profile", getCombinationProfileController);
-
-// School Profiles (manual enrichment, no AI)
-routes.get("/schools/:schoolId/profile", getSchoolProfileController);
-routes.put("/schools/:schoolId/profile", upsertSchoolProfileController);
 
 // School Enrichment Queue
 routes.post("/schools/:schoolId/enrichment-job", createSchoolEnrichmentJobController);

@@ -5,9 +5,9 @@ import { getSchoolsQuerySchema, getCombinationsBySchoolParamsSchema, getCombinat
 export async function getSchools(req: Request, res: Response, next: NextFunction) {
   try {
     const validated = getSchoolsQuerySchema.parse(req.query);
-    const { track, county, gender, subjects, limit, page, category } = validated;
+    const { track, county, gender, accommodation, subjects, limit, page, category } = validated;
 
-    const data = await getSchoolsHandler({ track, county, gender, subjects, category, limit: +limit, page: +page });
+    const data = await getSchoolsHandler({ track, county, gender, accommodation, subjects, category, limit: +limit, page: +page });
 
     res.json({ success: true, data });
   } catch (error: any) {
