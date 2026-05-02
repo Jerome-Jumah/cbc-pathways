@@ -13,42 +13,106 @@ datasource db {
 }
 
 model Track {
-  id                   String               @id @default(uuid()) @db.Uuid
-  name                 String               @unique
-  pathway              String
-  SubjectCombinations  SubjectCombination[]
+  id                  String               @id @default(uuid()) @db.Uuid
+  name                String               @unique
+  pathway             String
+  SubjectCombinations SubjectCombination[]
+  profile             TrackProfile?
 
   @@map("tracks")
 }
 
 model Subject {
-  id                   String               @id @default(uuid()) @db.Uuid
-  name                 String               @unique
-  Combinations         SubjectCombination[] @relation("CombinationSubjects")
+  id           String               @id @default(uuid()) @db.Uuid
+  name         String               @unique
+  Combinations SubjectCombination[] @relation("CombinationSubjects")
 
   @@map("subjects")
 }
 
 model SubjectCombination {
-  id                   String               @id @default(uuid()) @db.Uuid
-  code                 String
-  trackId              String               @db.Uuid
-  track                Track                @relation(fields: [trackId], references: [id])
-  Subjects             Subject[]            @relation("CombinationSubjects")
-  Schools              School[]             @relation("CombinationSchools")
+  id      String   @id @default(uuid()) @db.Uuid
+  code    String
+  trackId String   @db.Uuid
+  track   Track    @relation(fields: [trackId], references: [id])
+  Subjects Subject[]  @relation("CombinationSubjects")
+  Schools  School[]   @relation("CombinationSchools")
+  profile  CombinationProfile?
 
   @@map("subject_combinations")
 }
 
 model School {
-  id                   String               @id // SHA256 of name+county+cluster
-  name                 String
-  county               String
-  cluster              String
-  gender               String
-  category             String
-  accommodationType    String               @map("accommodation_type")
-  Combinations         SubjectCombination[] @relation("CombinationSchools")
+  id                String               @id // SHA256 of name+county+cluster
+  name              String
+  county            String
+  cluster           String
+  gender            String
+  category          String
+  accommodationType String               @map("accommodation_type")
+  Combinations      SubjectCombination[] @relation("CombinationSchools")
+  profile           SchoolProfile?
 
   @@map("schools")
+}
+
+model SchoolProfile {
+  id                String    @id @default(uuid()) @db.Uuid
+  schoolId          String    @unique
+  motto             String?
+  establishedYear   Int?
+  principalName     String?
+  phone             String?
+  email             String?
+  website           String?
+  description       String?
+  locationText      String?
+  studentPopulation Int?
+  highlights        Json?
+  sourceUrl         String?
+  sourceType        String?
+  confidenceScore   Float?
+  lastVerifiedAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@map("school_profiles")
+}
+
+model TrackProfile {
+  id               String   @id @default(uuid()) @db.Uuid
+  trackId          String   @unique @db.Uuid
+  shortDescription String?
+  description      String
+  highlights       Json
+  careerPathways   Json
+  recommendedFor   Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@map("track_profiles")
+}
+
+model CombinationProfile {
+  id              String   @id @default(uuid()) @db.Uuid
+  combinationId   String   @unique @db.Uuid
+  overview        String
+  bestFor         String?
+  difficultyLevel String?
+  careerPathways  Json
+  keyBenefits     Json
+  subjectDetails  Json?
+  generatedBy     String?
+  promptVersion   String?
+  confidenceScore Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  combination SubjectCombination @relation(fields: [combinationId], references: [id], onDelete: Cascade)
+
+  @@map("combination_profiles")
 }

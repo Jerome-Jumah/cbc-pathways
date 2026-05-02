@@ -12,7 +12,8 @@
     "build": " yarn bld-api && yarn bld-ui",
     "postinstall": "prisma generate --schema ./prisma/schema.prisma",
     "ingest": "tsx src/run-ingestion.mts",
-    "integrity": "tsx src/check-integrity.mts"
+    "integrity": "tsx src/check-integrity.mts",
+    "seed:tracks": "tsx src/jobs/seed-track-profiles.mts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
