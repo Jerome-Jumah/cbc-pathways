@@ -68,26 +68,29 @@ export default function SchoolDetailsPage() {
 
   useEffect(() => {
     if (!schoolId) return
-    setLoading(true)
-    setError(null)
+    const fetchSchoolData = async () => {
+      setLoading(true)
+      setError(null)
+      setCombosError(null)
 
-    // Fetch profile and combinations in parallel
-    Promise.all([
-      apiGet<SchoolProfileResponse>(`/schools/${encodeURIComponent(schoolId)}/profile`),
-      apiGet<NewSchoolCombinationsResponse>(`/schools/${encodeURIComponent(schoolId)}/combinations`),
-    ])
-      .then(([profileRes, combosRes]) => {
+      try {
+        const [profileRes, combosRes] = await Promise.all([
+          apiGet<SchoolProfileResponse>(`/schools/${encodeURIComponent(schoolId)}/profile`),
+          apiGet<NewSchoolCombinationsResponse>(`/schools/${encodeURIComponent(schoolId)}/combinations`),
+        ])
         setData(profileRes.data)
         setCombos(combosRes.data.byTrack)
-      })
-      .catch((err) => {
+      } catch (err) {
         const profileErr = err instanceof ApiError ? err.message : "Failed to load school data."
         setError(profileErr)
-      })
-      .finally(() => {
+        setCombosError(profileErr)
+      } finally {
         setLoading(false)
         setCombosLoading(false)
-      })
+      }
+    }
+
+    fetchSchoolData()
   }, [schoolId])
 
   // Separate combos error handling

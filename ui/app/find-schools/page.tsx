@@ -157,7 +157,9 @@ function FindSchoolsInner() {
     if (!isMounted.current) {
       isMounted.current = true
     }
-    fetchSchools(1)
+    queueMicrotask(() => {
+      void fetchSchools(1)
+    })
     syncUrl()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCounties, selectedClusters, selectedGenders, selectedAccommodations])

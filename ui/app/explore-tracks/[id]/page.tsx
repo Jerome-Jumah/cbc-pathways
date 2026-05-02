@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ApiError, apiGet } from "@/lib/api-client"
+import { ApiError, apiGet, buildQuery } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
 import type { CombinationsListResponse, SubjectCombination, Track, TrackResponse } from "@/types/api"
 import {
@@ -94,36 +94,57 @@ export default function TrackCombinationsPage() {
   // Fetch track profile
   useEffect(() => {
     if (!trackId) return
-    setTrackLoading(true)
-    apiGet<TrackResponse>(`/track-profiles/${encodeURIComponent(trackId)}`)
-      .then((res) => setTrack(res.data))
-      .catch((err) => setTrackError(err instanceof ApiError ? err.message : "Failed to load track."))
-      .finally(() => setTrackLoading(false))
+    const fetchTrack = async () => {
+      setTrackLoading(true)
+      setTrackError(null)
+
+      try {
+        const res = await apiGet<TrackResponse>(`/track-profiles/${encodeURIComponent(trackId)}`)
+        setTrack(res.data)
+      } catch (err) {
+        setTrackError(err instanceof ApiError ? err.message : "Failed to load track.")
+      } finally {
+        setTrackLoading(false)
+      }
+    }
+
+    fetchTrack()
   }, [trackId])
 
   // Fetch first page of combinations
   useEffect(() => {
     if (!trackId) return
-    setCombosLoading(true)
-    apiGet<CombinationsListResponse>(`/combinations?trackId=${encodeURIComponent(trackId)}&limit=${PAGE_SIZE}&page=1`)
-      .then((res) => {
+    const fetchCombinations = async () => {
+      setCombosLoading(true)
+
+      try {
+        const qs = buildQuery({ trackId, limit: PAGE_SIZE, page: 1 })
+        const res = await apiGet<CombinationsListResponse>(`/combinations${qs}`)
         setAllCombinations(res.data.data)
         setTotalCombinations(res.data.meta.total)
         setPage(1)
-      })
-      .catch(() => {})
-      .finally(() => setCombosLoading(false))
+      } catch {
+        setAllCombinations([])
+        setTotalCombinations(0)
+      } finally {
+        setCombosLoading(false)
+      }
+    }
+
+    fetchCombinations()
   }, [trackId])
 
-  const loadMore = () => {
+  const loadMore = async () => {
     const nextPage = page + 1
     setLoadingMore(true)
-    apiGet<CombinationsListResponse>(`/combinations?trackId=${encodeURIComponent(trackId)}&limit=${PAGE_SIZE}&page=${nextPage}`)
-      .then((res) => {
-        setAllCombinations((prev) => [...prev, ...res.data.data])
-        setPage(nextPage)
-      })
-      .finally(() => setLoadingMore(false))
+    try {
+      const qs = buildQuery({ trackId, limit: PAGE_SIZE, page: nextPage })
+      const res = await apiGet<CombinationsListResponse>(`/combinations${qs}`)
+      setAllCombinations((prev) => [...prev, ...res.data.data])
+      setPage(nextPage)
+    } finally {
+      setLoadingMore(false)
+    }
   }
 
   const hasMore = allCombinations.length < totalCombinations

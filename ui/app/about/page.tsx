@@ -237,7 +237,7 @@ export default function AboutPage() {
                        <HugeiconsIcon icon={QuoteUpIcon} size={24} className="fill-current" />
                      </div>
                      <p className="text-sm font-bold text-slate-700 italic relative z-10 leading-relaxed">
-                       "Your journey is unique. We're here to guide every step."
+                       &ldquo;Your journey is unique. We&apos;re here to guide every step.&rdquo;
                      </p>
                   </div>
                 </Card>

@@ -35,8 +35,8 @@ async function request<T>(
         ...(init.headers ?? {}),
       },
     });
-  } catch (networkErr) {
-    throw new ApiError(0, "Network error – unable to reach the server.");
+  } catch {
+    throw new ApiError(0, "Network error - unable to reach the server.");
   }
 
   if (!res.ok) {
@@ -92,11 +92,19 @@ export async function apiPut<T>(
  * Builds a query string from an object, omitting undefined/null/empty values.
  */
 export function buildQuery(
-  params: Record<string, string | number | boolean | undefined | null>,
+  params: Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null>,
 ): string {
-  const entries = Object.entries(params).filter(
-    ([, v]) => v !== undefined && v !== null && v !== "",
-  );
-  if (!entries.length) return "";
-  return "?" + new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "") continue;
+    if (Array.isArray(value)) {
+      if (value.length > 0) searchParams.set(key, value.map(String).join(","));
+    } else {
+      searchParams.set(key, String(value));
+    }
+  }
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : "";
 }
