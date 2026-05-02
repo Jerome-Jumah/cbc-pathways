@@ -7,65 +7,41 @@ type Props = {
 
 /**
  * Dynamic metadata for /school/[id].
- * 
- * In production replace the mock lookup with a real fetch:
- *   const school = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/schools/${params.id}`).then(r => r.json())
+ * Fetches real school profile from backend, falls back gracefully.
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api";
 
-  // --- Mock data lookup (replace with real API/DB call in production) ---
-  const MOCK_SCHOOLS: Record<
-    string,
-    { name: string; county: string; cluster: string; gender: string; accommodation: string }
-  > = {
-    "alliance-high": {
-      name: "Alliance High School",
-      county: "Kiambu County",
-      cluster: "C1 (National)",
-      gender: "Boys",
-      accommodation: "Boarding",
-    },
-    "lenana-school": {
-      name: "Lenana School",
-      county: "Nairobi County",
-      cluster: "C1 (National)",
-      gender: "Boys",
-      accommodation: "Boarding",
-    },
-    "st-marys-girls": {
-      name: "St. Mary's Girls Nairobi",
-      county: "Nairobi County",
-      cluster: "C2 (Extra County)",
-      gender: "Girls",
-      accommodation: "Boarding",
-    },
-  };
+  try {
+    const res = await fetch(`${apiBase}/schools/${encodeURIComponent(id)}/profile`, {
+      next: { revalidate: 3600 }, // cache for 1 hour
+    });
 
-  const school = MOCK_SCHOOLS[id];
+    if (!res.ok) throw new Error("Not found");
 
-  if (!school) {
-    // Fallback for unknown IDs
+    const body = await res.json();
+    const school = body?.data?.school;
+
+    if (!school) throw new Error("Missing school data");
+
+    const title = `${school.name} - CBC Subject Combinations and Tracks`;
+    const description = `Explore CBC subject combinations, tracks, pathway options, and school profile details for ${school.name} in ${school.county}. ${school.cluster ? `Cluster ${school.cluster}.` : ""} ${school.gender ?? ""} ${school.accommodationType ?? ""}.`.trim();
+    const url = `${siteConfig.url}/school/${id}`;
+
     return {
-      title: "School Not Found",
-      robots: { index: false, follow: false },
-    };
-  }
-
-  const title = `${school.name} - Subject Combinations, Tracks and Pathways`;
-  const description = `View subject combinations, tracks, and pathways offered by ${school.name} in ${school.county}. ${school.cluster} school · ${school.gender} · ${school.accommodation}. Compare CBC options by cluster, gender, and accommodation type.`;
-  const url = `${siteConfig.url}/school/${id}`;
-
-  return {
-    title,
-    description,
-    alternates: { canonical: url },
-    openGraph: {
       title,
       description,
-      url,
-    },
-  };
+      alternates: { canonical: url },
+      openGraph: { title, description, url },
+    };
+  } catch {
+    // Graceful fallback — do not block page render
+    return {
+      title: "School Profile - CBC Pathways",
+      description: "View subject combinations, tracks, and pathways for this school.",
+    };
+  }
 }
 
 export default function SchoolDetailLayout({

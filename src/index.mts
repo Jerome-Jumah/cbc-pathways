@@ -24,7 +24,7 @@ app.use(
 
 app.use(json());
 
-app.use(routes);
+app.use('/api',routes);
 
 //request rate limiting per ip
 app.use((req, res, next) => {

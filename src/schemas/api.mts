@@ -4,6 +4,7 @@ export const getSchoolsQuerySchema = z.object({
   track: z.string().optional(),
   county: z.string().optional(),
   gender: z.string().optional(),
+  accommodation: z.string().optional(),
   category: z.string().optional(),
   // Expecting a comma-separated list of subjects from the query string
   subjects: z

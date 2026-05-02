@@ -3,13 +3,14 @@ import { SchoolWhereInput } from "../generated/prisma/models.js";
 import { GetSchoolsQuery } from "../schemas/api.mjs";
 
 export async function getSchoolsHandler(filters: GetSchoolsQuery) {
-  const { track, county, gender, category, subjects, page, limit } = filters;
+  const { track, county, gender, accommodation, category, subjects, page, limit } = filters;
 
   // Build the dynamic WHERE clause
   const whereClause: SchoolWhereInput = {};
 
   if (county) whereClause.county = { equals: county, mode: "insensitive" };
   if (gender) whereClause.gender = { equals: gender, mode: "insensitive" };
+  if (accommodation) whereClause.accommodationType = { equals: accommodation, mode: "insensitive" };
   if (category) whereClause.category = { equals: category, mode: "insensitive" };
 
   // Relational Filtering: Track and Subjects
