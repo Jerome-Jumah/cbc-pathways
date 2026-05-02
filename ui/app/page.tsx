@@ -18,6 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { COUNTY_OPTIONS, SUBJECT_OPTIONS, CLUSTER_OPTIONS } from "@/constants/filter-options"
 import { cn } from "@/lib/utils"
 import {
   ArrowDown01Icon,
@@ -36,31 +37,36 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-const SUBJECT_OPTIONS: Option[] = [
-  { label: "Biology", value: "biology" },
-  { label: "Chemistry", value: "chemistry" },
-  { label: "Physics", value: "physics" },
-  { label: "Mathematics", value: "mathematics" },
-  { label: "Geography", value: "geography" },
-  { label: "History", value: "history" },
-]
-
-const COUNTY_OPTIONS = [
-  { label: "Nairobi", value: "nairobi" },
-  { label: "Mombasa", value: "mombasa" },
-  { label: "Kisumu", value: "kisumu" },
-  { label: "Nakuru", value: "nakuru" },
-  { label: "Eldoret", value: "eldoret" },
-]
+// Map subjects from constants into MultiSelect Option format
+const SUBJECT_OPTIONS_SELECT: Option[] = SUBJECT_OPTIONS.map((s) => ({
+  label: s.label,
+  value: s.value,
+}))
 
 export default function Home() {
-  const [subjects, setSubjects] = useState<string[]>(["biology", "chemistry", "physics"])
+  const router = useRouter()
+  const [subjects, setSubjects] = useState<string[]>([])
   const [county, setCounty] = useState<string>("")
   const [countyOpen, setCountyOpen] = useState(false)
   const [gender, setGender] = useState<string>("any")
   const [cluster, setCluster] = useState<string>("")
+  const [countySearch, setCountySearch] = useState("")
+
+  const filteredCounties = COUNTY_OPTIONS.filter((c) =>
+    c.label.toLowerCase().includes(countySearch.toLowerCase())
+  )
+
+  const handleSearch = () => {
+    const params = new URLSearchParams()
+    if (subjects.length > 0) params.set("subjects", subjects.join(","))
+    if (county) params.set("county", county)
+    if (gender && gender !== "any") params.set("gender", gender)
+    if (cluster) params.set("cluster", cluster)
+    router.push(`/find-schools?${params.toString()}`)
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafe] font-sans flex flex-col items-center">
@@ -83,11 +89,18 @@ export default function Home() {
               Explore 500+ combinations and 10,000+ schools across Kenya aligned to the CBC pathway.
             </p>
             <div className="hidden lg:flex gap-4 mt-10">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-7 text-base shadow-sm font-semibold">
+              <Button
+                onClick={handleSearch}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-7 text-base shadow-sm font-semibold"
+              >
                 <HugeiconsIcon icon={Search01Icon} size={20} className="mr-2 stroke-[2.5]" /> 
                 Find Schools
               </Button>
-              <Button variant="outline" className="px-8 py-7 text-base text-blue-600 border-blue-200 hover:bg-blue-50 font-semibold shadow-sm">
+              <Button
+                variant="outline"
+                className="px-8 py-7 text-base text-blue-600 border-blue-200 hover:bg-blue-50 font-semibold shadow-sm"
+                onClick={() => router.push("/recommendations")}
+              >
                 <HugeiconsIcon icon={Compass01Icon} size={20} className="mr-2 stroke-[2.5]" /> 
                 Get Recommendations
               </Button>
@@ -153,7 +166,7 @@ export default function Home() {
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-slate-900 ml-1">Select Subjects</label>
               <MultiSelect
-                options={SUBJECT_OPTIONS}
+                options={SUBJECT_OPTIONS_SELECT}
                 selected={subjects}
                 onChange={setSubjects}
                 placeholder="Search subjects..."
@@ -176,19 +189,24 @@ export default function Home() {
                     <HugeiconsIcon icon={ArrowDown01Icon} size={18} className="text-slate-400 opacity-100" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0" align="start">
+                <PopoverContent className="w-[220px] p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search county..." />
+                    <CommandInput
+                      placeholder="Search county..."
+                      value={countySearch}
+                      onValueChange={setCountySearch}
+                    />
                     <CommandList>
                       <CommandEmpty>No county found.</CommandEmpty>
                       <CommandGroup>
-                        {COUNTY_OPTIONS.map((c) => (
+                        {filteredCounties.map((c) => (
                           <CommandItem
                             key={c.value}
                             value={c.value}
                             onSelect={(currentValue) => {
                               setCounty(currentValue === county ? "" : currentValue)
                               setCountyOpen(false)
+                              setCountySearch("")
                             }}
                           >
                             <HugeiconsIcon
@@ -217,9 +235,9 @@ export default function Home() {
                   className="w-full appearance-none flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 bg-white cursor-pointer hover:border-slate-300 text-slate-700 font-medium text-sm h-[46px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="any">Any</option>
-                  <option value="boys">Boys School</option>
-                  <option value="girls">Girls School</option>
-                  <option value="mixed">Mixed School</option>
+                  <option value="BOYS">Boys School</option>
+                  <option value="GIRLS">Girls School</option>
+                  <option value="MIXED">Mixed School</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
                   <HugeiconsIcon icon={ArrowDown01Icon} size={18} />
@@ -238,11 +256,10 @@ export default function Home() {
                     !cluster ? "text-slate-400 font-normal" : "text-slate-700 font-medium"
                   )}
                 >
-                  <option value="" disabled hidden>Select cluster</option>
-                  <option value="national">National</option>
-                  <option value="extra-county">Extra County</option>
-                  <option value="county">County</option>
-                  <option value="sub-county">Sub County</option>
+                  <option value="">Any cluster</option>
+                  {CLUSTER_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
                   <HugeiconsIcon icon={ArrowDown01Icon} size={18} />
@@ -250,7 +267,11 @@ export default function Home() {
               </div>
             </div>
 
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 h-[46px] shadow-sm font-semibold w-full md:w-auto">
+            <Button
+              id="home-search-btn"
+              onClick={handleSearch}
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 h-[46px] shadow-sm font-semibold w-full md:w-auto"
+            >
               <HugeiconsIcon icon={Search01Icon} size={18} className="mr-2" /> Find Schools
             </Button>
           </div>
@@ -258,7 +279,10 @@ export default function Home() {
 
         {/* Action Cards */}
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <Card className="p-6 rounded-2xl flex flex-row items-center justify-between hover:shadow-md transition-shadow border-emerald-100 bg-emerald-50/30 cursor-pointer">
+          <Card
+            onClick={() => router.push("/explore-tracks")}
+            className="p-6 rounded-2xl flex flex-row items-center justify-between hover:shadow-md transition-shadow border-emerald-100 bg-emerald-50/30 cursor-pointer"
+          >
             <div className="flex flex-row items-center gap-6">
               <div className="w-16 h-16 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-sm shrink-0">
                 <HugeiconsIcon icon={Book01Icon} size={32}/>
@@ -273,7 +297,10 @@ export default function Home() {
             </div>
           </Card>
 
-          <Card className="p-6 rounded-2xl flex flex-row items-center justify-between hover:shadow-md transition-shadow border-orange-100 bg-orange-50/30 cursor-pointer">
+          <Card
+            onClick={() => router.push("/recommendations")}
+            className="p-6 rounded-2xl flex flex-row items-center justify-between hover:shadow-md transition-shadow border-orange-100 bg-orange-50/30 cursor-pointer"
+          >
             <div className="flex flex-row items-center gap-6">
               <div className="w-16 h-16 rounded-2xl bg-orange-400 flex items-center justify-center text-white shadow-sm shrink-0">
                 <HugeiconsIcon icon={StarIcon} size={32} />

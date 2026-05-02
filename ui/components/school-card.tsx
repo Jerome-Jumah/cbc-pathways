@@ -17,13 +17,13 @@ export interface School {
   id: string
   rank: number
   name: string
-  imageUrl: string
+  imageUrl?: string
   location: string
   cluster: string
-  gender: "Boys" | "Girls" | "Mixed"
-  accommodation: "Boarding" | "Day" | "Mixed"
+  gender: string
+  accommodation: string
   subjects: string[]
-  matchPercentage: number
+  matchPercentage?: number
 }
 
 interface SchoolCardProps {
@@ -84,12 +84,20 @@ export function SchoolCard({ school }: SchoolCardProps) {
         
         {/* Image Section */}
         <div className="relative w-full sm:w-[240px] h-[160px] shrink-0 rounded-xl overflow-hidden bg-slate-100">
-          <Image
-            src={school.imageUrl}
-            alt={school.name}
-            fill
-            className="object-cover"
-          />
+          {school.imageUrl ? (
+            <Image
+              src={school.imageUrl}
+              alt={school.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+              <span className="text-3xl font-extrabold text-slate-300">
+                {school.name.slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+          )}
           {/* Rank Badge */}
           <div className="absolute top-2 left-2 bg-emerald-700 text-white w-7 h-7 rounded-md flex items-center justify-center font-bold text-sm shadow-sm">
             {school.rank}
@@ -143,10 +151,12 @@ export function SchoolCard({ school }: SchoolCardProps) {
             <HugeiconsIcon icon={Favorite} size={20} />
           </button>
           
-          <div className="flex flex-col items-center mb-2">
-            <CircularProgress value={school.matchPercentage} />
-            <span className="text-xs font-semibold text-slate-500 mt-1">Match</span>
-          </div>
+          {school.matchPercentage !== undefined && (
+            <div className="flex flex-col items-center mb-2">
+              <CircularProgress value={school.matchPercentage} />
+              <span className="text-xs font-semibold text-slate-500 mt-1">Match</span>
+            </div>
+          )}
         </div>
 
       </Card>

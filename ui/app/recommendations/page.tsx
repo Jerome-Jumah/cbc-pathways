@@ -5,7 +5,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { COUNTY_OPTIONS } from "@/constants/filter-options"
+import { ApiError, apiPost } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
+import type { RecommendationResult } from "@/types/api"
 import {
   ArrowLeft01Icon, ArrowRight01Icon, Book01Icon, Building03Icon,
   Chart03Icon,
@@ -25,7 +28,6 @@ import {
   Wrench01Icon
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import Image from "next/image"
 import Link from 'next/link'
 import { useState } from "react"
 
@@ -56,10 +58,10 @@ const INTERESTS = [
 
 export default function RecommendationsPage() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(["biology", "chemistry", "physics"]); // pre-selected for demo
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(["science_health", "engineering"]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [preferences, setPreferences] = useState({
-    location: "Nairobi County",
+    location: "",
     environment: "Co-ed",
     accommodation: "Any",
     classSize: "Medium (31 - 45 students)",
@@ -67,14 +69,19 @@ export default function RecommendationsPage() {
     budget: "Any budget"
   });
 
+  // API state
+  const [recResults, setRecResults] = useState<RecommendationResult | null>(null);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recError, setRecError] = useState<string | null>(null);
+
   const toggleSubject = (id: string) => {
-    setSelectedSubjects(prev => 
+    setSelectedSubjects(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     );
   };
 
   const toggleInterest = (id: string) => {
-    setSelectedInterests(prev => 
+    setSelectedInterests(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -83,14 +90,51 @@ export default function RecommendationsPage() {
     setPreferences(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleNext = () => setCurrentStep(prev => Math.min(4, prev + 1));
+  const fetchRecommendations = async () => {
+    setRecLoading(true);
+    setRecError(null);
+    try {
+      // Map lowercase subject IDs to uppercase for the API
+      const subjectMap: Record<string, string> = {
+        biology: "BIOLOGY", chemistry: "CHEMISTRY", physics: "PHYSICS",
+        mathematics: "MATHEMATICS", english: "ENGLISH", kiswahili: "KISWAHILI",
+        history: "HISTORY", geography: "GEOGRAPHY", cre: "CRE",
+        business: "BUSINESS STUDIES", agriculture: "AGRICULTURE", computer: "COMPUTER STUDIES",
+      };
+      const preferredSubjects = selectedSubjects.map(s => subjectMap[s] ?? s.toUpperCase());
+      const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+      const body: Record<string, unknown> = { preferredSubjects };
+      if (countyOption) body.preferredCounty = countyOption.value;
+
+      const res = await apiPost<{ status: string; data: RecommendationResult }>(
+        "/recommendations",
+        body
+      );
+      setRecResults(res.data);
+    } catch (err) {
+      setRecError(err instanceof ApiError ? err.message : "Failed to get recommendations.");
+    } finally {
+      setRecLoading(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentStep === 3) {
+      setCurrentStep(4);
+      fetchRecommendations();
+    } else {
+      setCurrentStep(prev => Math.min(4, prev + 1));
+    }
+  };
   const handleBack = () => setCurrentStep(prev => Math.max(1, prev - 1));
   const handleReset = () => {
     setCurrentStep(1);
     setSelectedSubjects([]);
     setSelectedInterests([]);
+    setRecResults(null);
+    setRecError(null);
     setPreferences({
-      location: "Nairobi County",
+      location: "",
       environment: "Co-ed",
       accommodation: "Any",
       classSize: "Medium (31 - 45 students)",
@@ -545,133 +589,90 @@ export default function RecommendationsPage() {
             <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center mb-10">
                 <h1 className="text-4xl font-extrabold text-slate-900 mb-3">Here are your recommendations! 🎉</h1>
-                <p className="text-lg font-medium text-slate-600">
-                  Because you like <span className="text-blue-600 font-bold">Biology</span> and <span className="text-blue-600 font-bold">Chemistry</span>, 
-                  <br />and you're interested in <span className="text-blue-600 font-bold">Science & Health</span>.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {/* Recommended Combinations Card */}
-                <Card className="flex flex-col p-6 rounded-2xl border-slate-200 shadow-sm">
-                  <h3 className="font-bold text-slate-900 mb-6">Recommended Combinations</h3>
-                  <div className="flex flex-col gap-4">
-                     
-                     <Link href="/combination/1" className="flex flex-col gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
-                       <div className="flex items-center gap-3">
-                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">1</div>
-                         <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Biology, Chemistry, Physics</span>
-                         <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 font-bold border-none ml-auto shrink-0">Best Match</Badge>
-                         <span className="text-sm font-bold text-emerald-600 ml-2">92% <span className="font-medium text-xs">match</span></span>
-                       </div>
-                     </Link>
-
-                     <Link href="/combination/2" className="flex flex-col gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
-                       <div className="flex items-center gap-3">
-                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">2</div>
-                         <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Biology, Chemistry, Mathematics</span>
-                         <span className="text-sm font-bold text-emerald-600 ml-auto shrink-0">89% <span className="font-medium text-xs">match</span></span>
-                       </div>
-                     </Link>
-
-                     <Link href="/combination/3" className="flex flex-col gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
-                       <div className="flex items-center gap-3">
-                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">3</div>
-                         <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Chemistry, Biology, Geography</span>
-                         <span className="text-sm font-bold text-emerald-600 ml-auto shrink-0">86% <span className="font-medium text-xs">match</span></span>
-                       </div>
-                     </Link>
-
-                  </div>
-                  <Button variant="outline" className="w-full mt-6 bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 font-semibold rounded-xl h-11">
-                    View all combinations <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-2" />
-                  </Button>
-                </Card>
-
-                {/* Top Matching Schools Card */}
-                <Card className="flex flex-col p-6 rounded-2xl border-slate-200 shadow-sm">
-                  <h3 className="font-bold text-slate-900 mb-6">Top Matching Schools</h3>
-                  <div className="flex flex-col gap-4">
-                     
-                     <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                       <div className="w-12 h-12 rounded-lg bg-slate-200 shrink-0 overflow-hidden relative border border-slate-100">
-                         <Image src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=200&auto=format&fit=crop" fill alt="School" className="object-cover" />
-                       </div>
-                       <div className="flex flex-col flex-1">
-                         <div className="flex justify-between items-start w-full">
-                           <span className="text-sm font-bold text-slate-900">Alliance High School</span>
-                           <span className="text-sm font-bold text-emerald-600 shrink-0">92% <span className="font-medium text-xs">match</span></span>
-                         </div>
-                         <span className="text-xs text-slate-500 font-medium mt-1">C2 • Nairobi County • Boys • Boarding</span>
-                       </div>
-                     </div>
-
-                     <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                       <div className="w-12 h-12 rounded-lg bg-slate-200 shrink-0 overflow-hidden relative border border-slate-100">
-                         <Image src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=200&auto=format&fit=crop" fill alt="School" className="object-cover" />
-                       </div>
-                       <div className="flex flex-col flex-1">
-                         <div className="flex justify-between items-start w-full">
-                           <span className="text-sm font-bold text-slate-900">St. Mary's Girls Nairobi</span>
-                           <span className="text-sm font-bold text-emerald-600 shrink-0">86% <span className="font-medium text-xs">match</span></span>
-                         </div>
-                         <span className="text-xs text-slate-500 font-medium mt-1">C2 • Nairobi County • Girls • Boarding</span>
-                       </div>
-                     </div>
-
-                     <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                       <div className="w-12 h-12 rounded-lg bg-slate-200 shrink-0 overflow-hidden relative border border-slate-100">
-                         <Image src="https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?q=80&w=200&auto=format&fit=crop" fill alt="School" className="object-cover" />
-                       </div>
-                       <div className="flex flex-col flex-1">
-                         <div className="flex justify-between items-start w-full">
-                           <span className="text-sm font-bold text-slate-900">Kenya High School</span>
-                           <span className="text-sm font-bold text-emerald-600 shrink-0">84% <span className="font-medium text-xs">match</span></span>
-                         </div>
-                         <span className="text-xs text-slate-500 font-medium mt-1">C1 • Kiambu County • Boys • Day</span>
-                       </div>
-                     </div>
-
-                  </div>
-                  <Button variant="outline" className="w-full mt-6 bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 font-semibold rounded-xl h-11">
-                    View all schools <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-2" />
-                  </Button>
-                </Card>
+                <p className="text-lg font-medium text-slate-600">Based on your selected subjects and preferences.</p>
               </div>
 
-              {/* Why these recommendations Card */}
-              <Card className="flex flex-col sm:flex-row items-center gap-8 p-8 rounded-3xl bg-[#f8f9fc] border-none shadow-sm mb-8">
-                 <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                   <HugeiconsIcon icon={Idea01Icon} size={56} className="text-blue-600" />
-                 </div>
-                 <div className="flex flex-col">
-                   <h3 className="text-xl font-bold text-slate-900 mb-2">Why these recommendations?</h3>
-                   <p className="text-sm text-slate-600 font-medium mb-4 leading-relaxed">
-                     These combinations and schools align with your interests in Science & Health, your favorite subjects, and your preferences.
-                   </p>
-                   <div className="flex flex-col gap-2">
-                     <div className="flex items-center gap-2">
-                       <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} className="text-emerald-500 shrink-0" />
-                       <span className="text-sm font-medium text-slate-700">Your favorite subjects (Biology, Chemistry, Physics) go well together.</span>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} className="text-emerald-500 shrink-0" />
-                       <span className="text-sm font-medium text-slate-700">These combinations open more career pathways in science and health fields.</span>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} className="text-emerald-500 shrink-0" />
-                       <span className="text-sm font-medium text-slate-700">The schools listed offer strong programs in the subjects you're interested in.</span>
-                     </div>
-                   </div>
-                 </div>
-              </Card>
+              {recLoading && (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
+                  <p className="text-sm font-medium text-slate-500">Finding your best matches…</p>
+                </div>
+              )}
 
-              {/* Action Bar */}
+              {!recLoading && recError && (
+                <div className="flex flex-col items-center justify-center py-12 bg-red-50 rounded-2xl border border-red-100 text-center mb-8">
+                  <HugeiconsIcon icon={InformationCircleIcon} size={32} className="text-red-400 mb-3" />
+                  <p className="font-bold text-red-700 mb-1">Could not load recommendations</p>
+                  <p className="text-sm text-red-500 mb-4">{recError}</p>
+                  <Button onClick={fetchRecommendations} className="bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold h-10 px-6">Retry</Button>
+                </div>
+              )}
+
+              {!recLoading && !recError && recResults && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <Card className="flex flex-col p-6 rounded-2xl border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-6">Recommended Combinations</h3>
+                    <div className="flex flex-col gap-3">
+                      {recResults.pathwayRecommendations.length === 0 && (
+                        <p className="text-sm text-slate-500">No combinations found for your subjects.</p>
+                      )}
+                      {recResults.pathwayRecommendations.map((combo, idx) => (
+                        <Link key={combo.id} href={`/combination/${combo.id}`}
+                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                          <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">{idx + 1}</div>
+                          <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex-1 min-w-0 truncate">
+                            {combo.Subjects.map(s => s.name).join(", ")}
+                          </span>
+                          {idx === 0 && <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 font-bold border-none shrink-0">Best Match</Badge>}
+                          <span className="text-sm font-bold text-emerald-600 shrink-0">{combo.matchScore}%</span>
+                        </Link>
+                      ))}
+                    </div>
+                    <Link href="/explore-tracks" className="mt-6">
+                      <Button variant="outline" className="w-full bg-white text-blue-600 border-blue-200 hover:bg-blue-50 font-semibold rounded-xl h-11">
+                        Explore combinations <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-2" />
+                      </Button>
+                    </Link>
+                  </Card>
+
+                  <Card className="flex flex-col p-6 rounded-2xl border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-6">Top Matching Schools</h3>
+                    <div className="flex flex-col gap-3">
+                      {recResults.schoolOptions.length === 0 && (
+                        <p className="text-sm text-slate-500">No schools found matching your filters.</p>
+                      )}
+                      {recResults.schoolOptions.slice(0, 5).map((school, idx) => (
+                        <div key={idx} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 shrink-0 flex items-center justify-center border border-slate-100">
+                            <span className="text-sm font-extrabold text-blue-400">{school.name.slice(0, 2).toUpperCase()}</span>
+                          </div>
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="text-sm font-bold text-slate-900 truncate">{school.name}</span>
+                            <span className="text-xs text-slate-500 font-medium">{school.county}{school.category ? ` • ${school.category}` : ""}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Link href="/find-schools" className="mt-6">
+                      <Button variant="outline" className="w-full bg-white text-blue-600 border-blue-200 hover:bg-blue-50 font-semibold rounded-xl h-11">
+                        View all schools <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-2" />
+                      </Button>
+                    </Link>
+                  </Card>
+                </div>
+              )}
+
+              {!recLoading && !recError && !recResults && (
+                <div className="flex flex-col items-center justify-center py-16 text-center mb-8">
+                  <p className="text-slate-500 text-sm">No results yet.</p>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-auto">
-                <Button variant="outline" className="w-full sm:w-auto bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 font-semibold rounded-xl h-11 px-8">
+                <Button variant="outline" className="w-full sm:w-auto bg-white text-blue-600 border-blue-200 hover:bg-blue-50 font-semibold rounded-xl h-11 px-8">
                   <HugeiconsIcon icon={FavouriteIcon} size={18} className="mr-2" /> Save Results
                 </Button>
-                <Button variant="outline" className="w-full sm:w-auto bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 font-semibold rounded-xl h-11 px-8">
+                <Button variant="outline" className="w-full sm:w-auto bg-white text-blue-600 border-blue-200 hover:bg-blue-50 font-semibold rounded-xl h-11 px-8">
                   <HugeiconsIcon icon={Share01Icon} size={18} className="mr-2" /> Share Results
                 </Button>
                 <Button onClick={handleReset} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl h-11 px-8 shadow-sm">
