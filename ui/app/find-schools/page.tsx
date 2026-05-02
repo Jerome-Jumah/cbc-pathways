@@ -20,9 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { cn } from '@/lib/utils'
 import { HugeiconsIcon } from '@hugeicons/react'
-import {  Search02Icon } from "@hugeicons/core-free-icons"
+import { Search02Icon, FilterIcon } from "@hugeicons/core-free-icons"
 
 // --- Mock Data ---
 const MOCK_SCHOOLS: School[] = [
@@ -135,155 +136,179 @@ export default function FindSchoolsPage() {
     });
   }
 
+  const renderFilters = () => (
+    <>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-900">Filters</h2>
+        <button 
+          onClick={() => {
+            setSearchCounty("");
+            setSelectedCounties([]);
+            setSelectedClusters([]);
+            setSelectedGenders(["Any"]);
+            setSelectedAccommodations(["Any"]);
+          }}
+          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+        >
+          Clear all
+        </button>
+      </div>
+
+      {/* County Filter */}
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm font-bold text-slate-900">County</h3>
+        <div className="relative">
+          <HugeiconsIcon icon={Search02Icon} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <Input 
+            placeholder="Search county..." 
+            value={searchCounty}
+            onChange={(e) => setSearchCounty(e.target.value)}
+            className="pl-9 bg-white border-slate-200 h-10 rounded-xl" 
+          />
+        </div>
+        <div className="flex flex-col gap-3 mt-1">
+          {[
+            { label: "Nairobi", count: "1,245" },
+            { label: "Kiambu", count: "692" },
+            { label: "Machakos", count: "623" },
+            { label: "Mombasa", count: "512" },
+            { label: "Kisumu", count: "488" },
+          ].filter(c => c.label.toLowerCase().includes(searchCounty.toLowerCase())).map((item) => (
+            <label key={item.label} className="flex items-center space-x-3 cursor-pointer group">
+              <Checkbox 
+                checked={selectedCounties.includes(item.label)}
+                onCheckedChange={() => toggleFilter(setSelectedCounties, item.label)}
+                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
+              />
+              <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                {item.label} <span className="text-slate-400 font-normal">({item.count})</span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 self-start mt-1">
+          Show more
+        </button>
+      </div>
+
+      <div className="h-px bg-slate-200 w-full" />
+
+      {/* Cluster Filter */}
+      <div className="flex flex-col gap-4">
+        <h3 className="text-sm font-bold text-slate-900">Cluster</h3>
+        <div className="flex flex-col gap-3">
+          {[
+            { id: "c1", label: "C1 (Top National)", color: "text-emerald-600" },
+            { id: "c2", label: "C2 (Extra County)", color: "text-blue-600" },
+            { id: "c3", label: "C3 (County)", color: "text-orange-500" },
+            { id: "c4", label: "C4 (Sub County)", color: "text-rose-500" },
+          ].map((item) => (
+            <label key={item.id} className="flex items-center space-x-3 cursor-pointer group">
+              <Checkbox 
+                checked={selectedClusters.includes(item.id)}
+                onCheckedChange={() => toggleFilter(setSelectedClusters, item.id)}
+                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
+              />
+              <div className="flex items-center gap-2">
+                <span className={cn("text-[10px] font-bold border rounded-full px-1.5 py-0.5", item.color, `border-${item.color.split("-")[1]}-200 bg-white`)}>
+                  {item.id.toUpperCase()}
+                </span>
+                <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                  {item.label}
+                </span>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-px bg-slate-200 w-full" />
+
+      {/* Gender Filter */}
+      <div className="flex flex-col gap-4">
+        <h3 className="text-sm font-bold text-slate-900">Gender</h3>
+        <div className="flex flex-col gap-3">
+          {[
+            { label: "Any" },
+            { label: "Boys" },
+            { label: "Girls" },
+            { label: "Mixed" },
+          ].map((item) => (
+            <label key={item.label} className="flex items-center space-x-3 cursor-pointer group">
+              <Checkbox 
+                checked={selectedGenders.includes(item.label)}
+                onCheckedChange={() => toggleFilter(setSelectedGenders, item.label, true)}
+                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
+              />
+              <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                {item.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-px bg-slate-200 w-full" />
+
+      {/* Accommodation Filter */}
+      <div className="flex flex-col gap-4">
+        <h3 className="text-sm font-bold text-slate-900">Accommodation</h3>
+        <div className="flex flex-col gap-3">
+          {[
+            { label: "Any" },
+            { label: "Boarding" },
+            { label: "Day" },
+            { label: "Mixed" },
+          ].map((item) => (
+            <label key={item.label} className="flex items-center space-x-3 cursor-pointer group">
+              <Checkbox 
+                checked={selectedAccommodations.includes(item.label)}
+                onCheckedChange={() => toggleFilter(setSelectedAccommodations, item.label, true)}
+                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
+              />
+              <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                {item.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+
   return (
-    <div className="min-h-screen bg-[#f8fafe] font-sans flex flex-col items-center">
+    <div className="min-h-screen bg-[#f8fafe] font-sans flex flex-col items-center pb-20">
       <NavBar />
       
-      <main className="w-full max-w-[1400px] px-6 py-8 flex flex-col lg:flex-row gap-8">
+      <main className="w-full max-w-[1400px] px-4 md:px-6 py-4 md:py-8 flex flex-col lg:flex-row gap-6 lg:gap-8 pb-24">
         
-        {/* Left Sidebar - Filters */}
-        <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm self-start">
-          
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Filters</h2>
-            <button 
-              onClick={() => {
-                setSearchCounty("");
-                setSelectedCounties([]);
-                setSelectedClusters([]);
-                setSelectedGenders(["Any"]);
-                setSelectedAccommodations(["Any"]);
-              }}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-            >
-              Clear all
-            </button>
-          </div>
-
-          {/* County Filter */}
-          <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-bold text-slate-900">County</h3>
-            <div className="relative">
-              <HugeiconsIcon icon={Search02Icon} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <Input 
-                placeholder="Search county..." 
-                value={searchCounty}
-                onChange={(e) => setSearchCounty(e.target.value)}
-                className="pl-9 bg-white border-slate-200 h-10 rounded-xl" 
-              />
-            </div>
-            <div className="flex flex-col gap-3 mt-1">
-              {[
-                { label: "Nairobi", count: "1,245" },
-                { label: "Kiambu", count: "692" },
-                { label: "Machakos", count: "623" },
-                { label: "Mombasa", count: "512" },
-                { label: "Kisumu", count: "488" },
-              ].filter(c => c.label.toLowerCase().includes(searchCounty.toLowerCase())).map((item) => (
-                <label key={item.label} className="flex items-center space-x-3 cursor-pointer group">
-                  <Checkbox 
-                    checked={selectedCounties.includes(item.label)}
-                    onCheckedChange={() => toggleFilter(setSelectedCounties, item.label)}
-                    className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
-                  />
-                  <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                    {item.label} <span className="text-slate-400 font-normal">({item.count})</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 self-start mt-1">
-              Show more
-            </button>
-          </div>
-
-          <div className="h-px bg-slate-200 w-full" />
-
-          {/* Cluster Filter */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-sm font-bold text-slate-900">Cluster</h3>
-            <div className="flex flex-col gap-3">
-              {[
-                { id: "c1", label: "C1 (Top National)", color: "text-emerald-600" },
-                { id: "c2", label: "C2 (Extra County)", color: "text-blue-600" },
-                { id: "c3", label: "C3 (County)", color: "text-orange-500" },
-                { id: "c4", label: "C4 (Sub County)", color: "text-rose-500" },
-              ].map((item) => (
-                <label key={item.id} className="flex items-center space-x-3 cursor-pointer group">
-                  <Checkbox 
-                    checked={selectedClusters.includes(item.id)}
-                    onCheckedChange={() => toggleFilter(setSelectedClusters, item.id)}
-                    className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className={cn("text-[10px] font-bold border rounded-full px-1.5 py-0.5", item.color, `border-${item.color.split("-")[1]}-200 bg-white`)}>
-                      {item.id.toUpperCase()}
-                    </span>
-                    <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                      {item.label}
-                    </span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="h-px bg-slate-200 w-full" />
-
-          {/* Gender Filter */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-sm font-bold text-slate-900">Gender</h3>
-            <div className="flex flex-col gap-3">
-              {[
-                { label: "Any" },
-                { label: "Boys" },
-                { label: "Girls" },
-                { label: "Mixed" },
-              ].map((item) => (
-                <label key={item.label} className="flex items-center space-x-3 cursor-pointer group">
-                  <Checkbox 
-                    checked={selectedGenders.includes(item.label)}
-                    onCheckedChange={() => toggleFilter(setSelectedGenders, item.label, true)}
-                    className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
-                  />
-                  <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="h-px bg-slate-200 w-full" />
-
-          {/* Accommodation Filter */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-sm font-bold text-slate-900">Accommodation</h3>
-            <div className="flex flex-col gap-3">
-              {[
-                { label: "Any" },
-                { label: "Boarding" },
-                { label: "Day" },
-                { label: "Mixed" },
-              ].map((item) => (
-                <label key={item.label} className="flex items-center space-x-3 cursor-pointer group">
-                  <Checkbox 
-                    checked={selectedAccommodations.includes(item.label)}
-                    onCheckedChange={() => toggleFilter(setSelectedAccommodations, item.label, true)}
-                    className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]" 
-                  />
-                  <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
+        {/* Left Sidebar - Filters (Desktop) */}
+        <aside className="hidden lg:flex w-[280px] shrink-0 flex-col gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm self-start">
+          {renderFilters()}
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex-1 flex flex-col gap-6 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
+          
+          {/* Mobile Filters Trigger */}
+          <div className="flex lg:hidden w-full items-center justify-between">
+            <h1 className="text-base font-bold text-slate-900">Schools ({filteredSchools.length})</h1>
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-semibold text-slate-700 shadow-sm">
+                  <HugeiconsIcon icon={FilterIcon} size={16} /> Filters
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 flex flex-col">
+                <SheetTitle className="sr-only">Filters</SheetTitle>
+                <div className="flex-1 overflow-y-auto p-6 pt-14">
+                  <div className="flex flex-col gap-6">
+                    {renderFilters()}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
           
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">

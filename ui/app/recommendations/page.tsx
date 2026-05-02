@@ -269,7 +269,7 @@ export default function RecommendationsPage() {
         </div>
       </div>
       
-      <main className="w-full max-w-[1400px] px-6 py-10 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+      <main className="w-full max-w-[1400px] px-4 md:px-6 py-4 md:py-10 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-8 pb-24">
         
         {/* Left Content Area */}
         <div className="flex flex-col">
@@ -685,7 +685,7 @@ export default function RecommendationsPage() {
         </div>
 
         {/* Right Sidebar Area */}
-        <div className="hidden lg:block">
+        <div className="w-full lg:w-auto mt-6 lg:mt-0">
           <div className="sticky top-[100px]">
             {currentStep < 4 ? renderProgressSidebar() : renderResultsSidebar()}
           </div>
