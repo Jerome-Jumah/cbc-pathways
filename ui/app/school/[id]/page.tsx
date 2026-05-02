@@ -310,144 +310,183 @@ export default function SchoolDetailsPage() {
           </div>
 
           <div className="px-8 flex flex-col gap-8">
+            {activeTab === "Overview" && (
+              <>
+                <div className="flex flex-col gap-4">
+                  <h3 className="text-lg font-bold text-slate-900">Quick Facts</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex flex-col p-4 bg-blue-50 rounded-xl border border-blue-100">
+                      <span className="text-xs font-semibold text-blue-400 mb-1">Combinations</span>
+                      <span className="text-2xl font-extrabold text-blue-700">{combosLoading ? "…" : totalCombinations}</span>
+                    </div>
+                    <div className="flex flex-col p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-xs font-semibold text-slate-400 mb-1">Tracks</span>
+                      <span className="text-2xl font-extrabold text-slate-900">{school.tracksOffered.length}</span>
+                    </div>
+                    {school.cluster && (
+                      <div className="flex flex-col p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <span className="text-xs font-semibold text-emerald-400 mb-1">Cluster</span>
+                        <span className="text-2xl font-extrabold text-emerald-700">{school.cluster}</span>
+                      </div>
+                    )}
+                    {school.gender && (
+                      <div className="flex flex-col p-4 bg-purple-50 rounded-xl border border-purple-100">
+                        <span className="text-xs font-semibold text-purple-400 mb-1">Gender</span>
+                        <span className="text-lg font-extrabold text-purple-700">{school.gender}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-            {/* Quick Facts */}
-            <div className="flex flex-col gap-4">
-              <h3 className="text-lg font-bold text-slate-900">Quick Facts</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex flex-col p-4 bg-blue-50 rounded-xl border border-blue-100">
-                  <span className="text-xs font-semibold text-blue-400 mb-1">Combinations</span>
-                  <span className="text-2xl font-extrabold text-blue-700">{combosLoading ? "…" : totalCombinations}</span>
-                </div>
-                <div className="flex flex-col p-4 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-semibold text-slate-400 mb-1">Tracks</span>
-                  <span className="text-2xl font-extrabold text-slate-900">{school.tracksOffered.length}</span>
-                </div>
-                {school.cluster && (
-                  <div className="flex flex-col p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <span className="text-xs font-semibold text-emerald-400 mb-1">Cluster</span>
-                    <span className="text-2xl font-extrabold text-emerald-700">{school.cluster}</span>
+                {profile?.highlights && profile.highlights.length > 0 && (
+                  <>
+                    <Separator className="bg-slate-100" />
+                    <div className="flex flex-col gap-4">
+                      <h3 className="text-lg font-bold text-slate-900">Highlights</h3>
+                      <div className="flex flex-col gap-3">
+                        {profile.highlights.map((highlight, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} className="text-emerald-500 shrink-0 mt-0.5" />
+                            <span className="text-sm font-medium text-slate-600 leading-snug">{highlight}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {activeTab === "Subject Combinations" && (
+              <div className="flex flex-col gap-6">
+                <h3 className="text-lg font-bold text-slate-900">
+                  Subject Combinations <span className="text-slate-500 font-medium">({combosLoading ? "…" : totalCombinations})</span>
+                </h3>
+
+                {combosLoading && (
+                  <div className="flex items-center gap-3 py-6">
+                    <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                    <p className="text-sm font-medium text-slate-500">Loading combinations…</p>
                   </div>
                 )}
-                {school.gender && (
-                  <div className="flex flex-col p-4 bg-purple-50 rounded-xl border border-purple-100">
-                    <span className="text-xs font-semibold text-purple-400 mb-1">Gender</span>
-                    <span className="text-lg font-extrabold text-purple-700">{school.gender}</span>
+
+                {!combosLoading && combos.length === 0 && (
+                  <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-xl p-4">
+                    <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-slate-400 shrink-0 mt-0.5" />
+                    <p className="text-sm text-slate-500">No combinations on record for this school yet.</p>
+                  </div>
+                )}
+
+                {!combosLoading && combos.map((trackGroup, tidx) => {
+                  const style = TRACK_COLORS[tidx % TRACK_COLORS.length]
+                  return (
+                    <div key={trackGroup.trackId} className="flex flex-col gap-3">
+                      <div className={cn("flex items-center gap-3 px-4 py-3 rounded-xl border", style.color)}>
+                        <HugeiconsIcon icon={style.icon} size={20} className="shrink-0" />
+                        <div className="flex flex-col flex-1">
+                          <span className="font-bold text-slate-900 text-sm">{trackGroup.trackName}</span>
+                          <span className="text-xs font-medium opacity-70">{trackGroup.pathway} · {trackGroup.combinations.length} combinations</span>
+                        </div>
+                        <Link href={`/explore-tracks/${trackGroup.trackId}`}>
+                          <Badge variant="secondary" className={cn("border-none font-semibold text-xs cursor-pointer hover:opacity-80", style.badgeColor)}>
+                            Explore Track
+                          </Badge>
+                        </Link>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4">
+                        {trackGroup.combinations.map((combo) => (
+                          <Link
+                            key={combo.id}
+                            href={`/combination/${combo.id}`}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 hover:border-blue-200 hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex flex-col flex-1 min-w-0">
+                              <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2">
+                                {combo.Subjects.map((s) => s.name).join(", ")}
+                              </span>
+                              <span className="text-[11px] font-semibold text-slate-400 mt-0.5">{combo.code}</span>
+                            </div>
+                            <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-slate-300 group-hover:text-blue-500 transition-colors shrink-0" />
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {activeTab === "Tracks Offered" && (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-bold text-slate-900">
+                  Tracks Offered <span className="text-slate-500 font-medium">({school.tracksOffered.length})</span>
+                </h3>
+                {school.tracksOffered.length === 0 ? (
+                  <p className="text-sm text-slate-500">No tracks data available.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {school.tracksOffered.map((trackName, idx) => {
+                      const style = TRACK_COLORS[idx % TRACK_COLORS.length]
+                      return (
+                        <div key={trackName} className={cn("rounded-2xl border p-5 flex gap-4 items-start transition-shadow hover:shadow-sm", style.color)}>
+                          <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 mt-1">
+                            <HugeiconsIcon icon={style.icon} size={24} className="opacity-80" />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <h4 className="font-bold text-base text-slate-900">{trackName}</h4>
+                            <Badge variant="secondary" className={cn("self-start mt-2 border-none font-semibold px-2.5 py-0.5", style.badgeColor)}>
+                              Available
+                            </Badge>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
-            </div>
+            )}
 
-            <Separator className="bg-slate-100" />
-
-            {/* Tracks Offered */}
-            <div className="flex flex-col gap-4">
-              <h3 className="text-lg font-bold text-slate-900">
-                Tracks Offered <span className="text-slate-500 font-medium">({school.tracksOffered.length})</span>
-              </h3>
-              {school.tracksOffered.length === 0 ? (
-                <p className="text-sm text-slate-500">No tracks data available.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {school.tracksOffered.map((trackName, idx) => {
-                    const style = TRACK_COLORS[idx % TRACK_COLORS.length]
-                    return (
-                      <div key={trackName} className={cn("rounded-2xl border p-5 flex gap-4 items-start transition-shadow hover:shadow-sm", style.color)}>
-                        <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 mt-1">
-                          <HugeiconsIcon icon={style.icon} size={24} className="opacity-80" />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <h4 className="font-bold text-base text-slate-900">{trackName}</h4>
-                          <Badge variant="secondary" className={cn("self-start mt-2 border-none font-semibold px-2.5 py-0.5", style.badgeColor)}>
-                            Available
-                          </Badge>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            <Separator className="bg-slate-100" />
-
-            {/* Subject Combinations — grouped by track */}
-            <div className="flex flex-col gap-6">
-              <h3 className="text-lg font-bold text-slate-900">
-                Subject Combinations <span className="text-slate-500 font-medium">({combosLoading ? "…" : totalCombinations})</span>
-              </h3>
-
-              {combosLoading && (
-                <div className="flex items-center gap-3 py-6">
-                  <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-                  <p className="text-sm font-medium text-slate-500">Loading combinations…</p>
-                </div>
-              )}
-
-              {!combosLoading && combos.length === 0 && (
+            {activeTab === "Gallery" && (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-bold text-slate-900">Gallery</h3>
                 <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-xl p-4">
-                  <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-slate-400 shrink-0 mt-0.5" />
-                  <p className="text-sm text-slate-500">No combinations on record for this school yet.</p>
+                  <HugeiconsIcon icon={Image01Icon} size={18} className="text-slate-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-slate-500">School photos are not available yet.</p>
                 </div>
-              )}
+              </div>
+            )}
 
-              {!combosLoading && combos.map((trackGroup, tidx) => {
-                const style = TRACK_COLORS[tidx % TRACK_COLORS.length]
-                return (
-                  <div key={trackGroup.trackId} className="flex flex-col gap-3">
-                    {/* Track header */}
-                    <div className={cn("flex items-center gap-3 px-4 py-3 rounded-xl border", style.color)}>
-                      <HugeiconsIcon icon={style.icon} size={20} className="shrink-0" />
-                      <div className="flex flex-col flex-1">
-                        <span className="font-bold text-slate-900 text-sm">{trackGroup.trackName}</span>
-                        <span className="text-xs font-medium opacity-70">{trackGroup.pathway} · {trackGroup.combinations.length} combinations</span>
-                      </div>
-                      <Link href={`/explore-tracks/${trackGroup.trackId}`}>
-                        <Badge variant="secondary" className={cn("border-none font-semibold text-xs cursor-pointer hover:opacity-80", style.badgeColor)}>
-                          Explore Track
-                        </Badge>
-                      </Link>
-                    </div>
-
-                    {/* Combination cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4">
-                      {trackGroup.combinations.map((combo) => (
-                        <Link
-                          key={combo.id}
-                          href={`/combination/${combo.id}`}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 hover:border-blue-200 hover:shadow-sm transition-all group"
-                        >
-                          <div className="flex flex-col flex-1 min-w-0">
-                            <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2">
-                              {combo.Subjects.map((s) => s.name).join(", ")}
-                            </span>
-                            <span className="text-[11px] font-semibold text-slate-400 mt-0.5">{combo.code}</span>
-                          </div>
-                          <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-slate-300 group-hover:text-blue-500 transition-colors shrink-0" />
-                        </Link>
-                      ))}
-                    </div>
+            {activeTab === "More Information" && (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-bold text-slate-900">More Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                    <span className="text-xs font-semibold text-slate-400">County</span>
+                    <p className="text-sm font-bold text-slate-900 mt-1">{school.county}</p>
                   </div>
-                )
-              })}
-            </div>
-
-            {/* Profile Highlights */}
-            {profile?.highlights && profile.highlights.length > 0 && (
-              <>
-                <Separator className="bg-slate-100" />
-                <div className="flex flex-col gap-4">
-                  <h3 className="text-lg font-bold text-slate-900">Highlights</h3>
-                  <div className="flex flex-col gap-3">
-                    {profile.highlights.map((highlight, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} className="text-emerald-500 shrink-0 mt-0.5" />
-                        <span className="text-sm font-medium text-slate-600 leading-snug">{highlight}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {school.category && (
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                      <span className="text-xs font-semibold text-slate-400">Category</span>
+                      <p className="text-sm font-bold text-slate-900 mt-1">{school.category}</p>
+                    </div>
+                  )}
+                  {school.accommodationType && (
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                      <span className="text-xs font-semibold text-slate-400">Accommodation</span>
+                      <p className="text-sm font-bold text-slate-900 mt-1">{school.accommodationType}</p>
+                    </div>
+                  )}
+                  {profile?.sourceUrl && (
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                      <span className="text-xs font-semibold text-slate-400">Source</span>
+                      <a href={profile.sourceUrl} className="block text-sm font-bold text-blue-600 mt-1 hover:text-blue-700" target="_blank" rel="noreferrer">
+                        View source
+                      </a>
+                    </div>
+                  )}
                 </div>
-              </>
+              </div>
             )}
           </div>
         </Card>

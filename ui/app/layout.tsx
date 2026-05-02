@@ -93,6 +93,21 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${fontSans.variable} ${georgia.variable} antialiased`}>
         {children}
+        <footer className="w-full bg-white border-t border-slate-100 px-6 py-8 pb-24 md:pb-8">
+          <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+            <p className="font-medium">
+              © {new Date().getFullYear()} CBC Pathways. All rights reserved.
+            </p>
+            <div className="flex flex-col gap-2 font-semibold text-slate-600 sm:flex-row sm:items-center sm:gap-5">
+              <a href="https://wa.me/254742301435" className="hover:text-blue-600">
+                WhatsApp: +254 742 301 435
+              </a>
+              <a href="mailto:owinojumahjerome@gmail.com" className="hover:text-blue-600">
+                owinojumahjerome@gmail.com
+              </a>
+            </div>
+          </div>
+        </footer>
         <MobileBottomNav />
         {/* Vercel Web Analytics — zero config page-view tracking */}
         <Analytics />
