@@ -1,7 +1,14 @@
 import rateLimit from "express-rate-limit";
-// Apply rate limiting to all requests
+import { env } from "../config/env.mjs";
+
 export const rateLimiterMiddleware = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
-  max: 100, // Limit each IP to 100 requests per window
-  message: "Too many requests from this IP, please try again later.",
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  max: env.RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: {
+      message: "Too many requests from this IP, please try again later.",
+    },
+  },
 });

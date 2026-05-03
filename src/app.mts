@@ -1,54 +1,86 @@
 import express, { json, type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import helmet from "helmet";
+import morgan from "morgan";
 import { ZodError } from "zod";
 
 import { routes } from "./routes/index.mjs";
 import { HttpErrorHandler, STATUS_CODES } from "./constants/index.mjs";
 import logger from "./constants/logger.mjs";
 import { rateLimiterMiddleware } from "./middleware/rate-limiter.mjs";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { env, isProduction } from "./config/env.mjs";
 
 export function createApp() {
   const app = express();
 
-  app.set("trust proxy", 1);
-
-  const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : [];
+  app.disable("x-powered-by");
+  app.set("trust proxy", isProduction ? 1 : false);
   app.use(
-    cors({
-      origin: process.env.NODE_ENV === "production" ? allowedOrigins : "*",
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      hsts: isProduction,
+    }),
+  );
+  app.use(
+    morgan(isProduction ? "combined" : "dev", {
+      stream: {
+        write: (message: string) => logger.info(message.trim()),
+      },
+      skip: (req: Request) => req.path === "/health",
     }),
   );
 
-  app.use(json());
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (!isProduction) {
+          callback(null, true);
+          return;
+        }
+
+        if (!origin || env.ALLOWED_ORIGINS.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new HttpErrorHandler("Origin is not allowed by CORS policy", STATUS_CODES.FORBIDDEN));
+      },
+      credentials: false,
+      optionsSuccessStatus: STATUS_CODES.NO_CONTENT,
+    }),
+  );
+
+  app.use(json({ limit: env.JSON_BODY_LIMIT }));
 
   app.get("/health", (_req, res) => {
     res.status(STATUS_CODES.SUCCESS).json({
       status: "ok",
+      environment: env.NODE_ENV,
       timestamp: new Date().toISOString(),
     });
   });
 
+  app.use("/api", rateLimiterMiddleware);
   app.use("/api", routes);
 
-  app.use((req, res, next) => {
-    if (req.path.includes("/static")) return next();
-    return rateLimiterMiddleware(req, res, next);
+  app.use("/api", (req, res) => {
+    res.status(STATUS_CODES.NOT_FOUND).json({
+      error: {
+        message: `API route not found: ${req.method} ${req.originalUrl}`,
+      },
+    });
   });
 
   app.use((req, res) => {
-    res.header("Cache-Control", "private, no-cache, no-store, must-revalidate");
-    res.header("Expires", "-1");
-    res.header("Pragma", "no-cache");
-    res.sendFile(join(__dirname, "public", "index.html"));
+    res.status(STATUS_CODES.NOT_FOUND).json({
+      error: {
+        message: `Route not found: ${req.method} ${req.originalUrl}`,
+      },
+    });
   });
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    logger.error(err instanceof Error ? err.message : String(err), { error: err });
-
     let message = "Internal server error";
     let issues: unknown;
     let statusCode: number = STATUS_CODES.INTERNAL_SERVER_ERROR;
@@ -60,8 +92,15 @@ export function createApp() {
     } else if (err instanceof HttpErrorHandler) {
       message = err.message;
       statusCode = err.status;
-    } else if (err instanceof Error && process.env.NODE_ENV !== "production") {
+    } else if (err instanceof Error && !isProduction) {
       message = err.message;
+    }
+
+    const logMessage = err instanceof Error ? err.message : String(err);
+    if (statusCode >= STATUS_CODES.INTERNAL_SERVER_ERROR) {
+      logger.error(logMessage, { error: err });
+    } else {
+      logger.warn(logMessage);
     }
 
     res.status(statusCode).json({ error: { message, issues } });

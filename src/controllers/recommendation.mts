@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 
-import logger from "../constants/logger.mjs";
 import { recommendationRequestSchema } from "../schemas/api.mjs";
 import { generateRecommendationsHandler } from "../handlers/recommendation.mjs";
 
@@ -15,7 +14,6 @@ export async function getRecommendations(req: Request, res: Response, next: Next
       data: recommendations,
     });
   } catch (error) {
-    logger.error(`Error generating recommendations: ${error}`);
     next(error);
   }
 }
