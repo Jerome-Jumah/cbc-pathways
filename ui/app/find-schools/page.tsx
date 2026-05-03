@@ -200,10 +200,10 @@ function FindSchoolsInner() {
   const renderFilters = () => (
     <>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">Filters</h2>
+        <h2 className="text-lg font-bold text-foreground">Filters</h2>
         <button
           onClick={clearAll}
-          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+          className="text-sm font-semibold text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300"
         >
           Clear all
         </button>
@@ -211,18 +211,18 @@ function FindSchoolsInner() {
 
       {/* County Filter */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-bold text-slate-900">County</h3>
+        <h3 className="text-sm font-bold text-foreground">County</h3>
         <div className="relative">
           <HugeiconsIcon
             icon={Search02Icon}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80"
             size={16}
           />
           <Input
             placeholder="Search county..."
             value={searchCounty}
             onChange={(e) => setSearchCounty(e.target.value)}
-            className="pl-9 bg-white border-slate-200 h-10 rounded-xl"
+            className="pl-9 bg-card border-border h-10 rounded-xl"
           />
         </div>
         <div className="flex flex-col gap-3 mt-1 max-h-48 overflow-y-auto pr-1">
@@ -231,9 +231,9 @@ function FindSchoolsInner() {
               <Checkbox
                 checked={selectedCounties.includes(item.value)}
                 onCheckedChange={() => toggleFilter(setSelectedCounties, item.value)}
-                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
+                className="border-border data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
               />
-              <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                 {item.label}
               </span>
             </label>
@@ -241,18 +241,18 @@ function FindSchoolsInner() {
         </div>
       </div>
 
-      <div className="h-px bg-slate-200 w-full" />
+      <div className="h-px bg-muted w-full" />
 
       {/* Cluster Filter */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-bold text-slate-900">Cluster</h3>
+        <h3 className="text-sm font-bold text-foreground">Cluster</h3>
         <div className="flex flex-col gap-3">
           {CLUSTER_OPTIONS.map((item) => (
             <label key={item.value} className="flex items-center space-x-3 cursor-pointer group">
               <Checkbox
                 checked={selectedClusters.includes(item.value)}
                 onCheckedChange={() => toggleFilter(setSelectedClusters, item.value)}
-                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
+                className="border-border data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
               />
               <div className="flex items-center gap-2">
                 <span
@@ -265,7 +265,7 @@ function FindSchoolsInner() {
                 >
                   {item.value}
                 </span>
-                <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                   {item.label}
                 </span>
               </div>
@@ -274,20 +274,20 @@ function FindSchoolsInner() {
         </div>
       </div>
 
-      <div className="h-px bg-slate-200 w-full" />
+      <div className="h-px bg-muted w-full" />
 
       {/* Gender Filter */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-bold text-slate-900">Gender</h3>
+        <h3 className="text-sm font-bold text-foreground">Gender</h3>
         <div className="flex flex-col gap-3">
           {[{ value: "Any", label: "Any" }, ...GENDER_OPTIONS.map((g) => ({ value: g.value, label: g.label }))].map((item) => (
             <label key={item.value} className="flex items-center space-x-3 cursor-pointer group">
               <Checkbox
                 checked={selectedGenders.includes(item.value)}
                 onCheckedChange={() => toggleFilter(setSelectedGenders, item.value, true)}
-                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
+                className="border-border data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
               />
-              <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                 {item.label}
               </span>
             </label>
@@ -295,11 +295,11 @@ function FindSchoolsInner() {
         </div>
       </div>
 
-      <div className="h-px bg-slate-200 w-full" />
+      <div className="h-px bg-muted w-full" />
 
       {/* Accommodation Filter */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-bold text-slate-900">Accommodation</h3>
+        <h3 className="text-sm font-bold text-foreground">Accommodation</h3>
         <div className="flex flex-col gap-3">
           {[{ value: "Any", label: "Any" }, ...ACCOMMODATION_OPTIONS.map((a) => ({ value: a.value, label: a.label }))].map(
             (item) => (
@@ -312,9 +312,9 @@ function FindSchoolsInner() {
                   onCheckedChange={() =>
                     toggleFilter(setSelectedAccommodations, item.value, true)
                   }
-                  className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
+                  className="border-border data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 w-5 h-5 rounded-[6px]"
                 />
-                <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                   {item.label}
                 </span>
               </label>
@@ -326,27 +326,27 @@ function FindSchoolsInner() {
   )
 
   return (
-    <div className="min-h-screen bg-[#f8fafe] font-sans flex flex-col items-center pb-20">
+    <div className="min-h-screen bg-background font-sans flex flex-col items-center pb-20">
       <NavBar />
 
       <main className="w-full max-w-[1400px] px-4 md:px-6 py-4 md:py-8 flex flex-col lg:flex-row gap-6 lg:gap-8 pb-24">
 
         {/* Left Sidebar - Filters (Desktop) */}
-        <aside className="hidden lg:flex w-[280px] shrink-0 flex-col gap-6 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm self-start">
+        <aside className="hidden lg:flex w-[280px] shrink-0 flex-col gap-6 bg-card p-6 rounded-2xl border border-border shadow-sm self-start">
           {renderFilters()}
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col gap-6 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex-1 flex flex-col gap-6 bg-card p-4 sm:p-6 rounded-2xl border border-border shadow-sm">
 
           {/* Mobile Filters Trigger */}
           <div className="flex lg:hidden w-full items-center justify-between">
-            <h1 className="text-base font-bold text-slate-900">
+            <h1 className="text-base font-bold text-foreground">
               Schools {!loading && `(${total})`}
             </h1>
             <Sheet>
               <SheetTrigger asChild>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-semibold text-slate-700 shadow-sm">
+                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-xl bg-card text-sm font-semibold text-foreground shadow-sm">
                   <HugeiconsIcon icon={FilterIcon} size={16} /> Filters
                 </button>
               </SheetTrigger>
@@ -361,15 +361,15 @@ function FindSchoolsInner() {
 
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
-            <h1 className="text-lg font-bold text-slate-900">
+            <h1 className="text-lg font-bold text-foreground">
               {loading
                 ? "Loading schools…"
                 : `Showing ${schools.length} of ${total} schools`}
             </h1>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-slate-500">Sort by</span>
+              <span className="text-sm font-medium text-muted-foreground">Sort by</span>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[140px] h-10 bg-slate-50 border-slate-200 rounded-xl font-semibold text-slate-700">
+                <SelectTrigger className="w-[140px] h-10 bg-muted border-border rounded-xl font-semibold text-foreground">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -383,8 +383,8 @@ function FindSchoolsInner() {
           {/* Loading State */}
           {loading && (
             <div className="flex flex-col items-center justify-center p-16 text-center">
-              <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-              <p className="text-sm font-medium text-slate-500">Loading schools…</p>
+              <div className="w-10 h-10 border-4 border-blue-200 dark:border-blue-800/50 border-t-blue-600 rounded-full animate-spin mb-4" />
+              <p className="text-sm font-medium text-muted-foreground">Loading schools…</p>
             </div>
           )}
 
@@ -404,15 +404,15 @@ function FindSchoolsInner() {
 
           {/* Empty State */}
           {!loading && !error && schools.length === 0 && (
-            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-100 text-center">
-              <h3 className="text-lg font-bold text-slate-900">No schools found</h3>
-              <p className="text-slate-500 text-sm mt-2">
+            <div className="flex flex-col items-center justify-center p-12 bg-card rounded-2xl border border-border text-center">
+              <h3 className="text-lg font-bold text-foreground">No schools found</h3>
+              <p className="text-muted-foreground text-sm mt-2">
                 Try adjusting your filters to find what you&apos;re looking for.
               </p>
               <Button
                 onClick={clearAll}
                 variant="outline"
-                className="mt-4 rounded-xl font-semibold border-slate-200"
+                className="mt-4 rounded-xl font-semibold border-border"
               >
                 Clear filters
               </Button>
@@ -435,11 +435,11 @@ function FindSchoolsInner() {
                     variant="outline"
                     disabled={loadingMore}
                     onClick={() => fetchSchools(page + 1, true)}
-                    className="border-slate-200 text-blue-600 hover:bg-blue-50 font-semibold rounded-xl h-11 px-8"
+                    className="border-border text-blue-600 dark:text-blue-300 hover:bg-accent font-semibold rounded-xl h-11 px-8"
                   >
                     {loadingMore ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin mr-2" />
+                        <div className="w-4 h-4 border-2 border-blue-300 dark:border-blue-700/50 border-t-blue-600 rounded-full animate-spin mr-2" />
                         Loading…
                       </>
                     ) : (
@@ -449,7 +449,7 @@ function FindSchoolsInner() {
                 </div>
               )}
 
-              <p className="text-sm text-center text-slate-400 font-medium mt-2">
+              <p className="text-sm text-center text-muted-foreground/80 font-medium mt-2">
                 Showing {schools.length} of {total} schools
               </p>
             </>
