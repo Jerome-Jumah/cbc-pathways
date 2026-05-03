@@ -13,7 +13,8 @@ export async function getSchools(req: Request, res: Response, next: NextFunction
       gender,
       accommodation,
       subjects,
-      category: category ?? cluster,
+      category,
+      cluster,
       limit: +limit,
       page: +page,
     });
