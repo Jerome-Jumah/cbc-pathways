@@ -1,5 +1,0 @@
-[phases.setup]
-nixpkgsArchive = "c8171b2aeccb28c8c5347f273a25adae172fb2a65bc8c975bc22ec58949d0eaf"
-
-[variables]
-NIXPACKS_NODE_VERSION = "24"
