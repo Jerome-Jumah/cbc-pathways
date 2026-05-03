@@ -79,11 +79,11 @@ export default function CombinationDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fafafa] font-sans flex flex-col items-center">
+      <div className="min-h-screen bg-background font-sans flex flex-col items-center">
         <NavBar />
         <div className="flex flex-col items-center justify-center flex-1 mt-32">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-          <p className="text-sm font-medium text-slate-500">Loading combination profile…</p>
+          <div className="w-12 h-12 border-4 border-blue-200 dark:border-blue-800/50 border-t-blue-600 rounded-full animate-spin mb-4" />
+          <p className="text-sm font-medium text-muted-foreground">Loading combination profile…</p>
         </div>
       </div>
     )
@@ -91,14 +91,14 @@ export default function CombinationDetailsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#fafafa] font-sans flex flex-col items-center">
+      <div className="min-h-screen bg-background font-sans flex flex-col items-center">
         <NavBar />
         <div className="flex flex-col items-center justify-center flex-1 mt-32 text-center px-6">
           <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
             <HugeiconsIcon icon={InformationCircleIcon} size={28} className="text-red-500" />
           </div>
-          <p className="text-base font-bold text-slate-900 mb-2">Unable to load combination</p>
-          <p className="text-sm text-slate-500 mb-6">{error}</p>
+          <p className="text-base font-bold text-foreground mb-2">Unable to load combination</p>
+          <p className="text-sm text-muted-foreground mb-6">{error}</p>
           <Button
             onClick={() => fetchProfile(false)}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold h-11 px-6"
@@ -118,13 +118,13 @@ export default function CombinationDetailsPage() {
   const keyBenefits = profile?.keyBenefits ?? []
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-sans flex flex-col items-center pb-20">
+    <div className="min-h-screen bg-background font-sans flex flex-col items-center pb-20">
       <NavBar />
       
       {/* Top Bar */}
-      <div className="w-full bg-white border-b border-slate-200 py-4 px-6 flex justify-center sticky top-0 z-30 shadow-sm">
+      <div className="w-full bg-card border-b border-border py-4 px-6 flex justify-center sticky top-0 z-30 shadow-sm">
         <div className="w-full max-w-[1400px]">
-          <Link href="/recommendations" className="inline-flex items-center text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
+          <Link href="/recommendations" className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} className="mr-2" /> Back to results
           </Link>
         </div>
@@ -136,8 +136,8 @@ export default function CombinationDetailsPage() {
         <div className="lg:col-span-3 flex flex-col gap-6">
           
           {/* Main Icon Card */}
-          <Card className="w-full aspect-square rounded-3xl bg-[#f0f4ff] border-none shadow-sm flex items-center justify-center">
-            <HugeiconsIcon icon={TestTube01Icon} size={120} className="text-blue-600" />
+          <Card className="w-full aspect-square rounded-3xl bg-indigo-50 dark:bg-indigo-950/30 border-none shadow-sm flex items-center justify-center">
+            <HugeiconsIcon icon={TestTube01Icon} size={120} className="text-blue-600 dark:text-blue-300" />
           </Card>
 
           {/* Navigation Menu */}
@@ -149,24 +149,24 @@ export default function CombinationDetailsPage() {
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left",
                   activeTab === item.label
-                    ? "bg-blue-50 text-blue-600" 
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <HugeiconsIcon icon={item.icon} size={20} className={activeTab === item.label ? "text-blue-600" : "text-slate-500"} />
+                <HugeiconsIcon icon={item.icon} size={20} className={activeTab === item.label ? "text-blue-600 dark:text-blue-300" : "text-muted-foreground"} />
                 {item.label}
               </button>
             ))}
           </div>
 
           {/* Help Box */}
-          <Card className="flex flex-col p-5 rounded-2xl border-slate-200 bg-white shadow-sm mt-4">
-             <h4 className="font-bold text-slate-900 mb-2">Need help choosing?</h4>
-             <p className="text-sm font-medium text-slate-500 mb-4 leading-relaxed">
+          <Card className="flex flex-col p-5 rounded-2xl border-border bg-card shadow-sm mt-4">
+             <h4 className="font-bold text-foreground mb-2">Need help choosing?</h4>
+             <p className="text-sm font-medium text-muted-foreground mb-4 leading-relaxed">
                Get personalized recommendations based on your interests.
              </p>
              <Link href="/recommendations">
-               <Button variant="outline" className="w-full bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 font-semibold rounded-xl">
+               <Button variant="outline" className="w-full bg-card text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 hover:bg-accent hover:text-blue-700 dark:hover:text-blue-300 font-semibold rounded-xl">
                  Get Recommendations
                </Button>
              </Link>
@@ -181,32 +181,32 @@ export default function CombinationDetailsPage() {
           {combination ? (
             <>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                   <HugeiconsIcon icon={TestTube01Icon} size={20} className="text-blue-600" />
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                   <HugeiconsIcon icon={TestTube01Icon} size={20} className="text-blue-600 dark:text-blue-300" />
                 </div>
-                <h1 className="text-3xl font-extrabold text-slate-900">
+                <h1 className="text-3xl font-extrabold text-foreground">
                   {combination.subjects.join(", ")}
                 </h1>
               </div>
               
               <div className="flex flex-wrap gap-2 mb-6">
-                <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-none font-bold px-3 py-1">
+                <Badge variant="secondary" className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300 border-none font-bold px-3 py-1">
                   {combination.track}
                 </Badge>
-                <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none font-medium px-3 py-1">
+                <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-medium px-3 py-1">
                   {combination.pathway}
                 </Badge>
               </div>
 
               {/* Mini Stats */}
               <div className="flex flex-wrap items-center gap-6 mb-8 text-sm font-semibold">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <HugeiconsIcon icon={Building03Icon} size={18} className="text-blue-600" />
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <HugeiconsIcon icon={Building03Icon} size={18} className="text-blue-600 dark:text-blue-300" />
                   <span>{combination.schoolCount} schools offer this</span>
                 </div>
                 {profile?.difficultyLevel && (
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <HugeiconsIcon icon={Mortarboard01Icon} size={18} className="text-purple-600" />
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <HugeiconsIcon icon={Mortarboard01Icon} size={18} className="text-purple-600 dark:text-purple-300" />
                     <span>{profile.difficultyLevel}</span>
                   </div>
                 )}
@@ -214,20 +214,20 @@ export default function CombinationDetailsPage() {
             </>
           ) : (
             <div className="mb-6">
-              <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Combination Profile</h1>
-              <p className="text-slate-500 text-sm">Loading combination details…</p>
+              <h1 className="text-3xl font-extrabold text-foreground mb-2">Combination Profile</h1>
+              <p className="text-muted-foreground text-sm">Loading combination details…</p>
             </div>
           )}
 
           {/* Horizontal Tabs */}
-          <div className="flex items-center gap-8 border-b border-slate-200 mb-8 overflow-x-auto">
+          <div className="flex items-center gap-8 border-b border-border mb-8 overflow-x-auto">
             {["Overview", "Career Pathways", "Subject Details"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "pb-3 text-sm font-bold whitespace-nowrap transition-colors relative",
-                  activeTab === tab ? "text-blue-600" : "text-slate-500 hover:text-slate-800"
+                  activeTab === tab ? "text-blue-600 dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {tab}
@@ -261,29 +261,29 @@ export default function CombinationDetailsPage() {
           {/* Overview Section */}
           {profile?.overview && (
             <div className="mb-10">
-              <h3 className="text-lg font-bold text-slate-900 mb-3">About this Combination</h3>
-              <p className="text-[15px] text-slate-600 font-medium leading-relaxed mb-6">
+              <h3 className="text-lg font-bold text-foreground mb-3">About this Combination</h3>
+              <p className="text-[15px] text-muted-foreground font-medium leading-relaxed mb-6">
                 {profile.overview}
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {profile.bestFor && (
-                  <Card className="flex flex-col p-4 rounded-2xl border bg-blue-50/50 border-blue-100 shadow-none">
+                  <Card className="flex flex-col p-4 rounded-2xl border bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/40 shadow-none">
                     <div className="flex items-center gap-2 mb-3">
-                      <HugeiconsIcon icon={Book01Icon} size={18} className="text-blue-600" />
-                      <span className="text-sm font-bold text-slate-900">Best For</span>
+                      <HugeiconsIcon icon={Book01Icon} size={18} className="text-blue-600 dark:text-blue-300" />
+                      <span className="text-sm font-bold text-foreground">Best For</span>
                     </div>
-                    <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.bestFor}</p>
+                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">{profile.bestFor}</p>
                   </Card>
                 )}
                 {profile.difficultyLevel && (
-                  <Card className="flex flex-col p-4 rounded-2xl border bg-emerald-50/50 border-emerald-100 shadow-none">
+                  <Card className="flex flex-col p-4 rounded-2xl border bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/40 shadow-none">
                     <div className="flex items-center gap-2 mb-3">
-                      <HugeiconsIcon icon={Mortarboard01Icon} size={18} className="text-emerald-600" />
-                      <span className="text-sm font-bold text-slate-900">Difficulty Level</span>
+                      <HugeiconsIcon icon={Mortarboard01Icon} size={18} className="text-emerald-600 dark:text-emerald-300" />
+                      <span className="text-sm font-bold text-foreground">Difficulty Level</span>
                     </div>
-                    <p className="text-xs text-slate-600 font-medium">{profile.difficultyLevel}</p>
-                    <Badge variant="secondary" className="mt-2 self-start bg-emerald-100/50 text-emerald-700 border-none font-bold text-[10px]">
+                    <p className="text-xs text-muted-foreground font-medium">{profile.difficultyLevel}</p>
+                    <Badge variant="secondary" className="mt-2 self-start bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-none font-bold text-[10px]">
                       {profile.difficultyLevel}
                     </Badge>
                   </Card>
@@ -295,34 +295,34 @@ export default function CombinationDetailsPage() {
           {/* Subjects Table */}
           {subjectList.length > 0 && (
             <div className="mb-10">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Subjects in this Combination</h3>
-              <div className="border border-slate-100 rounded-2xl bg-white overflow-hidden shadow-sm">
+              <h3 className="text-lg font-bold text-foreground mb-4">Subjects in this Combination</h3>
+              <div className="border border-border rounded-2xl bg-card overflow-hidden shadow-sm">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/50">
-                      <th className="py-4 px-6 font-semibold text-slate-500 text-xs tracking-wider uppercase">Subject</th>
-                      <th className="py-4 px-6 font-semibold text-slate-500 text-xs tracking-wider uppercase">Track</th>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="py-4 px-6 font-semibold text-muted-foreground text-xs tracking-wider uppercase">Subject</th>
+                      <th className="py-4 px-6 font-semibold text-muted-foreground text-xs tracking-wider uppercase">Track</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-border">
                     {subjectList.map((sub, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                      <tr key={idx} className="hover:bg-muted/50 transition-colors">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center shrink-0">
-                              <HugeiconsIcon icon={TestTube01Icon} size={16} className="text-blue-600" />
+                            <div className="w-8 h-8 rounded bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
+                              <HugeiconsIcon icon={TestTube01Icon} size={16} className="text-blue-600 dark:text-blue-300" />
                             </div>
-                            <span className="font-bold text-slate-900">{sub}</span>
+                            <span className="font-bold text-foreground">{sub}</span>
                           </div>
                         </td>
-                        <td className="py-4 px-6 font-medium text-slate-600">{combination?.track ?? "—"}</td>
+                        <td className="py-4 px-6 font-medium text-muted-foreground">{combination?.track ?? "—"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <div className="bg-blue-50/50 p-4 border-t border-slate-100 flex items-start gap-3">
-                  <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-blue-600 mt-0.5 shrink-0" />
-                  <p className="text-sm font-medium text-slate-600">
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-4 border-t border-border flex items-start gap-3">
+                  <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-blue-600 dark:text-blue-300 mt-0.5 shrink-0" />
+                  <p className="text-sm font-medium text-muted-foreground">
                     These subjects form part of the {combination?.track} track under the {combination?.pathway} pathway.
                   </p>
                 </div>
@@ -333,15 +333,15 @@ export default function CombinationDetailsPage() {
           {/* Schools offering - link to find-schools */}
           {combination && (
             <div className="mb-10">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">
+              <h3 className="text-lg font-bold text-foreground mb-4">
                 Schools Offering This Combination
               </h3>
-              <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                  <HugeiconsIcon icon={Building03Icon} size={28} className="text-blue-600" />
+              <div className="flex flex-col items-center justify-center p-8 bg-muted rounded-2xl border border-border text-center">
+                <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center mb-4">
+                  <HugeiconsIcon icon={Building03Icon} size={28} className="text-blue-600 dark:text-blue-300" />
                 </div>
-                <p className="text-2xl font-extrabold text-slate-900 mb-1">{combination.schoolCount}</p>
-                <p className="text-sm text-slate-500 font-medium mb-6">schools offer this combination</p>
+                <p className="text-2xl font-extrabold text-foreground mb-1">{combination.schoolCount}</p>
+                <p className="text-sm text-muted-foreground font-medium mb-6">schools offer this combination</p>
                 <Link href={`/find-schools?subjects=${combination.subjects.join(",")}`}>
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold h-11 px-8">
                     View Schools <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-2" />
@@ -358,19 +358,19 @@ export default function CombinationDetailsPage() {
           
           {/* Top Career Pathways */}
           {careerPathways.length > 0 && (
-            <Card className="flex flex-col p-6 rounded-2xl border-slate-200 shadow-sm">
-               <h3 className="font-bold text-slate-900 mb-5">Top Career Pathways</h3>
+            <Card className="flex flex-col p-6 rounded-2xl border-border shadow-sm">
+               <h3 className="font-bold text-foreground mb-5">Top Career Pathways</h3>
                <div className="flex flex-col gap-4">
                  {careerPathways.map((path, idx) => (
                    <div key={idx} className="flex items-center gap-3 group cursor-pointer">
-                     <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                       <HugeiconsIcon icon={Plant01Icon} size={18} className="text-blue-600" />
+                     <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
+                       <HugeiconsIcon icon={Plant01Icon} size={18} className="text-blue-600 dark:text-blue-300" />
                      </div>
                      <div className="flex flex-col flex-1">
-                       <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{path}</span>
-                       <span className="text-xs font-semibold text-emerald-600">Strong pathway</span>
+                       <span className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">{path}</span>
+                       <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">Strong pathway</span>
                      </div>
-                     <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-slate-300 group-hover:text-blue-600 transition-colors" />
+                     <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-muted-foreground/60 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors" />
                    </div>
                  ))}
                </div>
@@ -379,13 +379,13 @@ export default function CombinationDetailsPage() {
 
           {/* Key Benefits */}
           {keyBenefits.length > 0 && (
-            <Card className="flex flex-col p-6 rounded-2xl border-slate-200 shadow-sm">
-               <h3 className="font-bold text-slate-900 mb-5">Key Benefits</h3>
+            <Card className="flex flex-col p-6 rounded-2xl border-border shadow-sm">
+               <h3 className="font-bold text-foreground mb-5">Key Benefits</h3>
                <div className="flex flex-col gap-4">
                  {keyBenefits.map((benefit, idx) => (
                    <div key={idx} className="flex items-start gap-3">
-                     <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} className="text-emerald-500 shrink-0 mt-0.5" />
-                     <span className="text-sm font-medium text-slate-700 leading-snug">{benefit}</span>
+                     <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} className="text-emerald-500 dark:text-emerald-300 shrink-0 mt-0.5" />
+                     <span className="text-sm font-medium text-foreground leading-snug">{benefit}</span>
                    </div>
                  ))}
                </div>
@@ -409,22 +409,22 @@ export default function CombinationDetailsPage() {
 
           {/* Combination metadata */}
           {combination && (
-            <Card className="flex flex-col p-6 rounded-2xl border-slate-200 shadow-sm gap-4">
-              <h3 className="font-bold text-slate-900">At a glance</h3>
+            <Card className="flex flex-col p-6 rounded-2xl border-border shadow-sm gap-4">
+              <h3 className="font-bold text-foreground">At a glance</h3>
               <div className="flex flex-col gap-3 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-600">Track</span>
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-none font-medium">
+                  <span className="font-semibold text-muted-foreground">Track</span>
+                  <Badge variant="secondary" className="bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-none font-medium">
                     {combination.track}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-600">Pathway</span>
-                  <span className="text-slate-700 font-medium">{combination.pathway}</span>
+                  <span className="font-semibold text-muted-foreground">Pathway</span>
+                  <span className="text-foreground font-medium">{combination.pathway}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-600">Schools</span>
-                  <span className="text-slate-700 font-bold">{combination.schoolCount}</span>
+                  <span className="font-semibold text-muted-foreground">Schools</span>
+                  <span className="text-foreground font-bold">{combination.schoolCount}</span>
                 </div>
               </div>
             </Card>

@@ -64,12 +64,12 @@ function SheetContent({
         data-side={side}
         className={cn(
           // Base: fixed, high z-index, flex column, background, shadow
-          "fixed z-50 flex flex-col bg-white text-sm shadow-xl transition-transform duration-300 ease-in-out",
+          "fixed z-50 flex flex-col bg-card text-sm shadow-xl transition-transform duration-300 ease-in-out",
           // Side-specific sizing and positioning
-          side === "bottom" && "inset-x-0 bottom-0 border-t border-slate-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
-          side === "top"    && "inset-x-0 top-0 border-b border-slate-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top",
-          side === "left"   && "inset-y-0 left-0 h-full w-3/4 max-w-sm border-r border-slate-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
-          side === "right"  && "inset-y-0 right-0 h-full w-3/4 max-w-sm border-l border-slate-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
+          side === "bottom" && "inset-x-0 bottom-0 border-t border-border data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+          side === "top"    && "inset-x-0 top-0 border-b border-border data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top",
+          side === "left"   && "inset-y-0 left-0 h-full w-3/4 max-w-sm border-r border-border data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
+          side === "right"  && "inset-y-0 right-0 h-full w-3/4 max-w-sm border-l border-border data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
           className
         )}
         {...props}
@@ -78,7 +78,7 @@ function SheetContent({
         {showCloseButton && (
           <SheetPrimitive.Close
             data-slot="sheet-close"
-            className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors shadow-sm"
+            className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={2} />
             <span className="sr-only">Close</span>
@@ -118,7 +118,7 @@ function SheetTitle({
     <SheetPrimitive.Title
       data-slot="sheet-title"
       className={cn(
-        "text-base font-semibold text-slate-900",
+        "text-base font-semibold text-foreground",
         className
       )}
       {...props}

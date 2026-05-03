@@ -2,7 +2,7 @@ import { prisma } from "../db/client.mjs";
 import { RecommendationRequest } from "../schemas/api.mjs";
 
 export async function generateRecommendationsHandler(input: RecommendationRequest) {
-  const { preferredSubjects, preferredCounty, preferredCategory } = input;
+  const { preferredSubjects, preferredCounty, preferredCategory, gender } = input;
 
   // 1. Find Combinations that overlap with the student's preferred subjects
   const matchingCombinations = await prisma.subjectCombination.findMany({
@@ -44,6 +44,7 @@ export async function generateRecommendationsHandler(input: RecommendationReques
     where: {
       ...(preferredCounty && { county: { equals: preferredCounty, mode: "insensitive" } }),
       ...(preferredCategory && { category: { equals: preferredCategory, mode: "insensitive" } }),
+      ...(gender && { gender: { equals: gender, mode: "insensitive" } }),
       Combinations: {
         some: { id: { in: topCombinationIds } },
       },

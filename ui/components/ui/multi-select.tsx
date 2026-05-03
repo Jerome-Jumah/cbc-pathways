@@ -41,14 +41,14 @@ export function MultiSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "flex min-h-[46px] w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-background cursor-pointer hover:border-slate-300",
+            "flex min-h-[46px] w-full items-center justify-between rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background cursor-pointer hover:border-border",
             className
           )}
           onClick={() => setOpen(!open)}
         >
           <div className="flex flex-wrap gap-1">
             {selected.length === 0 && (
-              <span className="text-slate-400 py-0.5 ml-1">{placeholder}</span>
+              <span className="text-muted-foreground/80 py-0.5 ml-1">{placeholder}</span>
             )}
             {selected.map((item) => {
               const option = options.find((o) => o.value === item)
@@ -56,7 +56,7 @@ export function MultiSelect({
                 <Badge
                   key={item}
                   variant="secondary"
-                  className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded-md text-sm font-medium border-none flex items-center gap-1"
+                  className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 px-2 py-1 rounded-md text-sm font-medium border-none flex items-center gap-1"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleUnselect(item)
@@ -68,7 +68,7 @@ export function MultiSelect({
               )
             })}
           </div>
-          <div className="ml-auto text-slate-400 shrink-0">
+          <div className="ml-auto text-muted-foreground/80 shrink-0">
             <HugeiconsIcon icon={ArrowDown01Icon} size={18} />
           </div>
         </div>

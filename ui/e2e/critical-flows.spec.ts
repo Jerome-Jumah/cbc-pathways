@@ -422,6 +422,7 @@ test("explore track", async ({ page }) => {
 test("school detail", async ({ page }) => {
   await page.goto("/school/00000000-0000-4000-8000-000000000201");
   await expect(page.getByRole("heading", { name: /Tracks Offered/ }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Tracks Offered" }).first().click();
   await expect(page.getByRole("heading", { name: "Pure Sciences" })).toBeVisible();
 });
 
