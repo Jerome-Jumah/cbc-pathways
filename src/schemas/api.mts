@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 export const getSchoolsQuerySchema = z.object({
   track: z.string().optional(),
@@ -6,13 +6,14 @@ export const getSchoolsQuerySchema = z.object({
   gender: z.string().optional(),
   accommodation: z.string().optional(),
   category: z.string().optional(),
+  cluster: z.string().optional(),
   // Expecting a comma-separated list of subjects from the query string
   subjects: z
     .string()
     .optional()
     .transform(val => (val ? val.split(",").map(s => s.trim().toUpperCase()) : [])),
   page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(50),
+  limit: z.coerce.number().min(1).max(100).default(20),
 });
 
 export type GetSchoolsQuery = z.infer<typeof getSchoolsQuerySchema>;
@@ -28,11 +29,33 @@ export const getCombinationsBySubjectsQuerySchema = z.object({
 export const recommendationRequestSchema = z
   .object({
     // The subjects the student is good at or interested in
-    preferredSubjects: z.array(z.string().transform(s => s.toUpperCase())).min(1),
+    preferredSubjects: z.array(z.string().transform(s => s.toUpperCase())).min(1).optional(),
+    subjects: z.array(z.string().transform(s => s.toUpperCase())).min(1).optional(),
     // Optional filters to narrow down the schools
     preferredCounty: z.string().optional(),
+    county: z.string().optional(),
     preferredCategory: z.string().optional(), // e.g., "National", "Extra County"
+    gender: z.string().optional(),
   })
-  .strict();
+  .strict()
+  .transform(input => {
+    const preferredSubjects = input.preferredSubjects ?? input.subjects;
+    if (!preferredSubjects?.length) {
+      throw new ZodError([
+        {
+          code: "custom",
+          path: ["subjects"],
+          message: "At least one subject is required",
+        },
+      ]);
+    }
+
+    return {
+      preferredSubjects,
+      preferredCounty: input.preferredCounty ?? input.county,
+      preferredCategory: input.preferredCategory,
+      gender: input.gender,
+    };
+  });
 
 export type RecommendationRequest = z.infer<typeof recommendationRequestSchema>;

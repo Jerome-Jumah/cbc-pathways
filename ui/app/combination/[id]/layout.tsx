@@ -9,7 +9,8 @@ type Props = {
  * Dynamic metadata for /combination/[id].
  *
  * In production replace the mock lookup with a real fetch:
- *   const combo = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/combinations/${params.id}`).then(r => r.json())
+ *   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/combinations/${params.id}`)
+ *   const combo = await res.json()
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;

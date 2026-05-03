@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { getSchoolCombinationsHandler } from "../handlers/school-combinations.handler.mjs";
+import { schoolProfileParamsSchema } from "../schemas/school-profile.schema.mjs";
+import { httpErrorHandler, STATUS_CODES } from "../constants/index.mjs";
 
 export async function getSchoolCombinations(req: Request, res: Response, next: NextFunction) {
   try {
-    const schoolId = req.params.schoolId as string;
+    const { schoolId } = schoolProfileParamsSchema.parse(req.params);
     const data = await getSchoolCombinationsHandler(schoolId);
 
     if (!data) {
-      res.status(404).json({ success: false, error: "School not found" });
+      httpErrorHandler(STATUS_CODES.NOT_FOUND, `School with id '${schoolId}' not found.`);
       return;
     }
 

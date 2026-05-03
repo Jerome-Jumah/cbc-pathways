@@ -24,7 +24,9 @@ routes.get("/schools/:name/combinations-by-name", getCombinationsBySchool);
 routes.get("/combinations", getCombinations);
 routes.get("/combinations/by-subjects", getCombinationsBySubjects);
 routes.get("/combinations/:combinationId/profile", getCombinationProfileController);
-routes.get("/debug/validation", runValidation);
+if (process.env.NODE_ENV !== "production" || process.env.ENABLE_DEBUG_ROUTES === "true") {
+  routes.get("/debug/validation", runValidation);
+}
 routes.post("/recommendations", getRecommendations);
 
 // Track Profiles
@@ -41,4 +43,3 @@ routes.post("/schools/:schoolId/source-candidates", addSchoolSourceCandidateCont
 routes.get("/schools/:schoolId/source-candidates", listSchoolSourceCandidatesController);
 
 export { routes };
-

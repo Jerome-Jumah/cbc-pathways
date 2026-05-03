@@ -25,7 +25,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 // ─── Track icon/style by name (consistent with detail page) ───────────────────
 
@@ -47,15 +47,25 @@ export default function ExploreTracksPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchTracks = useCallback(async () => {
     setLoading(true)
-    apiGet<TracksResponse>("/track-profiles")
-      .then((res) => setTracks(res.data))
-      .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Failed to load tracks.")
-      })
-      .finally(() => setLoading(false))
+    setError(null)
+
+    try {
+      const res = await apiGet<TracksResponse>("/track-profiles")
+      setTracks(res.data)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to load tracks.")
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchTracks()
+    })
+  }, [fetchTracks])
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans flex flex-col items-center">
@@ -156,14 +166,7 @@ export default function ExploreTracksPage() {
             <p className="text-base font-bold text-slate-900 mb-2">Failed to load tracks</p>
             <p className="text-sm text-slate-500 mb-6">{error}</p>
             <Button
-              onClick={() => {
-                setLoading(true)
-                setError(null)
-                apiGet<TracksResponse>("/track-profiles")
-                  .then((res) => setTracks(res.data))
-                  .catch((err) => setError(err instanceof ApiError ? err.message : "Error"))
-                  .finally(() => setLoading(false))
-              }}
+              onClick={fetchTracks}
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold h-11 px-6"
             >
               <HugeiconsIcon icon={RefreshIcon} size={16} className="mr-2" /> Retry

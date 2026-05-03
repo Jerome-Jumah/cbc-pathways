@@ -25,7 +25,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 const MENU_ITEMS = [
   { label: "Overview", icon: Home01Icon },
@@ -47,35 +47,35 @@ export default function CombinationDetailsPage() {
   const [error, setError] = useState<string | null>(null)
   const [profilePending, setProfilePending] = useState(false)
 
-  const fetchProfile = (generate = false) => {
+  const fetchProfile = useCallback(async (generate = false) => {
     if (!combinationId) return
     setLoading(true)
     setError(null)
 
     const qs = generate ? "?generate=true" : ""
-    apiGet<CombinationProfileResponse>(
-      `/combinations/${encodeURIComponent(combinationId)}/profile${qs}`
-    )
-      .then((res) => {
-        setData(res.data)
-        setProfilePending(false)
-      })
-      .catch((err) => {
-        if (err instanceof ApiError && err.status === 404) {
-          // The combination exists but has no profile yet
-          setProfilePending(true)
-          setData({ found: false, combinationExists: true })
-        } else {
-          setError(err instanceof ApiError ? err.message : "Failed to load combination profile.")
-        }
-      })
-      .finally(() => setLoading(false))
-  }
+    try {
+      const res = await apiGet<CombinationProfileResponse>(
+        `/combinations/${encodeURIComponent(combinationId)}/profile${qs}`
+      )
+      setData(res.data)
+      setProfilePending(false)
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setProfilePending(true)
+        setData({ found: false, combinationExists: true })
+      } else {
+        setError(err instanceof ApiError ? err.message : "Failed to load combination profile.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [combinationId])
 
   useEffect(() => {
-    fetchProfile(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [combinationId])
+    queueMicrotask(() => {
+      void fetchProfile(false)
+    })
+  }, [fetchProfile])
 
   if (loading) {
     return (

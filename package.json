@@ -13,7 +13,11 @@
     "postinstall": "prisma generate --schema ./prisma/schema.prisma",
     "ingest": "tsx src/run-ingestion.mts",
     "integrity": "tsx src/check-integrity.mts",
-    "seed:tracks": "tsx src/jobs/seed-track-profiles.mts"
+    "seed:tracks": "tsx src/jobs/seed-track-profiles.mts",
+    "test": "node --test --test-timeout=30000 --import tsx \"tests/**/*.test.mts\"",
+    "test:watch": "node --test --watch --test-timeout=30000 --import tsx \"tests/**/*.test.mts\"",
+    "test:api": "node --test --test-timeout=30000 --import tsx \"tests/api/**/*.test.mts\"",
+    "test:e2e": "npm --prefix ui run test:e2e"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
