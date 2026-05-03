@@ -1,24 +1,29 @@
 import winston from "winston";
+import { env, isProduction } from "../config/env.mjs";
+
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: isProduction ? winston.format.json() : winston.format.combine(winston.format.colorize(), winston.format.simple()),
+  }),
+];
+
+if (env.LOG_FILE && !isProduction) {
+  transports.push(
+    new winston.transports.File({
+      filename: env.LOG_FILE,
+      format: winston.format.json(),
+    }),
+  );
+}
 
 const logger = winston.createLogger({
-  level: "info",
+  level: isProduction ? "info" : "debug",
   format: winston.format.combine(
-    winston.format.timestamp({format: 'YYYY-MM-DD HH:mm:ss' }), // Adds timestamp to logs
-    winston.format.json(), // Simple, human-readable format
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    winston.format.errors({ stack: !isProduction }),
+    winston.format.json(),
   ),
-  
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(), // Adds colors to console logs
-        winston.format.simple(), // Simple, human-readable format
-      ),
-    }),
-    new winston.transports.File({
-      filename: "app.log",
-      format: winston.format.json(), // JSON format for file logs
-    }),
-  ],
+  transports,
 });
 
 export default logger;

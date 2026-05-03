@@ -14,6 +14,7 @@ import {
   addSchoolSourceCandidateController,
   listSchoolSourceCandidatesController,
 } from "../controllers/school-enrichment.controller.mjs";
+import { isDebugRoutesEnabled } from "../config/env.mjs";
 
 const routes = Router();
 routes.get("/schools", getSchools);
@@ -24,7 +25,7 @@ routes.get("/schools/:name/combinations-by-name", getCombinationsBySchool);
 routes.get("/combinations", getCombinations);
 routes.get("/combinations/by-subjects", getCombinationsBySubjects);
 routes.get("/combinations/:combinationId/profile", getCombinationProfileController);
-if (process.env.NODE_ENV !== "production" || process.env.ENABLE_DEBUG_ROUTES === "true") {
+if (isDebugRoutesEnabled) {
   routes.get("/debug/validation", runValidation);
 }
 routes.post("/recommendations", getRecommendations);
