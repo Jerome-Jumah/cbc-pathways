@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.mts",
-    "dist": "yarn node dist/index.mjs",
-    "lcl": "yarn tsx watch src/index.mts",
+    "dist": "node dist/index.mjs",
+    "lcl": "tsx watch src/index.mts",
     "bld-api": "rimraf dist build && npx tsdown src/index.mts && cp ./package.json ./dist",
-    "build": "yarn bld-api",
+    "build": "npm run bld-api",
     "postinstall": "prisma generate --schema ./prisma/schema.prisma",
     "ingest": "tsx src/run-ingestion.mts",
     "integrity": "tsx src/check-integrity.mts",
