@@ -9,6 +9,7 @@ import { HttpErrorHandler, STATUS_CODES } from "./constants/index.mjs";
 import logger from "./constants/logger.mjs";
 import { rateLimiterMiddleware } from "./middleware/rate-limiter.mjs";
 import { env, isProduction } from "./config/env.mjs";
+import { attachAnonymousSession } from "./middleware/session.mjs";
 
 export function createApp() {
   const app = express();
@@ -46,12 +47,13 @@ export function createApp() {
 
         callback(new HttpErrorHandler("Origin is not allowed by CORS policy", STATUS_CODES.FORBIDDEN));
       },
-      credentials: false,
+      credentials: true,
       optionsSuccessStatus: STATUS_CODES.NO_CONTENT,
     }),
   );
 
   app.use(json({ limit: env.JSON_BODY_LIMIT }));
+  app.use(attachAnonymousSession);
 
   app.get("/health", (_req, res) => {
     res.status(STATUS_CODES.SUCCESS).json({
