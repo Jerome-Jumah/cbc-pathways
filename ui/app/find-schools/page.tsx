@@ -70,9 +70,12 @@ function FindSchoolsInner() {
   )
   const initialCluster = searchParams.get("cluster") ?? ""
   const initialGender = searchParams.get("gender") ?? ""
+  const initialAccommodation = searchParams.get("accommodation") ?? ""
   const initialSearch = searchParams.get("search") ?? ""
   const initialRecommendedCombinationIds = searchParams.get("recommendedCombinationIds") ?? ""
   const initialPreferredTrack = searchParams.get("preferredTrack") ?? ""
+  const hasRecommendationContext = initialRecommendedCombinationIds.length > 0 || initialSubjects.length > 0
+  const initialSort = searchParams.get("sort") ?? (hasRecommendationContext ? "relevance" : "name")
 
   // ── Filter state ──
   const [searchCounty, setSearchCounty] = useState("")
@@ -85,8 +88,10 @@ function FindSchoolsInner() {
   const [selectedGenders, setSelectedGenders] = useState<string[]>(
     initialGender ? [initialGender] : ["Any"]
   )
-  const [selectedAccommodations, setSelectedAccommodations] = useState<string[]>(["Any"])
-  const [sortBy, setSortBy] = useState("name")
+  const [selectedAccommodations, setSelectedAccommodations] = useState<string[]>(
+    initialAccommodation ? [initialAccommodation] : ["Any"]
+  )
+  const [sortBy, setSortBy] = useState(initialSort)
 
   // ── Pagination & data ──
   const [schools, setSchools] = useState<School[]>([])
@@ -100,8 +105,6 @@ function FindSchoolsInner() {
   // ── Refs to avoid double-fetch on mount ──
   const isMounted = useRef(false)
 
-  const hasRecommendationContext = initialRecommendedCombinationIds.length > 0 || initialSubjects.length > 0
-
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSchoolSearch(schoolSearch.trim()), 350)
     return () => window.clearTimeout(timeout)
@@ -114,13 +117,16 @@ function FindSchoolsInner() {
     if (selectedCounties[0]) params.set("county", selectedCounties[0])
     if (selectedClusters[0]) params.set("cluster", selectedClusters[0])
     const gender = selectedGenders.find((g) => g !== "Any")
+    const accommodation = selectedAccommodations.find((a) => a !== "Any")
     if (gender) params.set("gender", gender)
+    if (accommodation) params.set("accommodation", accommodation)
     if (initialSubjects.length > 0) params.set("subjects", initialSubjects.join(","))
     if (initialRecommendedCombinationIds) params.set("recommendedCombinationIds", initialRecommendedCombinationIds)
     if (initialPreferredTrack) params.set("preferredTrack", initialPreferredTrack)
+    if (sortBy !== (hasRecommendationContext ? "relevance" : "name")) params.set("sort", sortBy)
     const qs = params.toString()
     router.replace(qs ? `/find-schools?${qs}` : "/find-schools", { scroll: false })
-  }, [debouncedSchoolSearch, initialPreferredTrack, initialRecommendedCombinationIds, initialSubjects, router, selectedCounties, selectedClusters, selectedGenders])
+  }, [debouncedSchoolSearch, hasRecommendationContext, initialPreferredTrack, initialRecommendedCombinationIds, initialSubjects, router, selectedCounties, selectedClusters, selectedGenders, selectedAccommodations, sortBy])
 
   // ── Build API query ──
   const buildApiQuery = useCallback(
@@ -137,14 +143,14 @@ function FindSchoolsInner() {
         county,
         gender,
         accommodation,
-        category: cluster,
         cluster,
         subjects: initialSubjects,
         recommendedCombinationIds: initialRecommendedCombinationIds,
         preferredTrack: initialPreferredTrack,
+        sort: sortBy,
       })
     },
-    [debouncedSchoolSearch, initialPreferredTrack, initialRecommendedCombinationIds, initialSubjects, selectedCounties, selectedClusters, selectedGenders, selectedAccommodations]
+    [debouncedSchoolSearch, initialPreferredTrack, initialRecommendedCombinationIds, initialSubjects, selectedCounties, selectedClusters, selectedGenders, selectedAccommodations, sortBy]
   )
 
   // ── Fetch schools ──
@@ -184,7 +190,7 @@ function FindSchoolsInner() {
     })
     syncUrl()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSchoolSearch, selectedCounties, selectedClusters, selectedGenders, selectedAccommodations])
+  }, [debouncedSchoolSearch, selectedCounties, selectedClusters, selectedGenders, selectedAccommodations, sortBy])
 
   // ── Toggle helper ──
   const toggleFilter = (
@@ -214,6 +220,7 @@ function FindSchoolsInner() {
     setSelectedClusters([])
     setSelectedGenders(["Any"])
     setSelectedAccommodations(["Any"])
+    setSortBy(hasRecommendationContext ? "relevance" : "name")
   }
 
   const filteredCountyOptions = COUNTY_OPTIONS.filter((c) =>
@@ -414,12 +421,13 @@ function FindSchoolsInner() {
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-muted-foreground">Sort by</span>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[140px] h-10 bg-muted border-border rounded-xl font-semibold text-foreground">
+                <SelectTrigger className="w-[180px] h-10 bg-muted border-border rounded-xl font-semibold text-foreground">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
+                  {hasRecommendationContext && <SelectItem value="relevance" className="font-medium">Recommended match</SelectItem>}
                   <SelectItem value="name" className="font-medium">Name (A-Z)</SelectItem>
-                  <SelectItem value="county" className="font-medium">County</SelectItem>
+                  <SelectItem value="county" className="font-medium">County (A-Z)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
