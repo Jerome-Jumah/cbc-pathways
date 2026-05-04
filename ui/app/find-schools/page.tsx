@@ -2,6 +2,7 @@
 
 import { NavBar } from "@/components/nav-bar"
 import { SchoolCard } from "@/components/school-card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -26,7 +27,7 @@ import type { School, SchoolsListResponse } from "@/types/api"
 import { FilterIcon, RefreshIcon, Search02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import React, { Suspense, useCallback, useEffect, useRef, useState } from "react"
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 const LIMIT = 20
 
@@ -36,9 +37,7 @@ const LIMIT = 20
 function adaptSchool(s: School, index: number) {
   const clusterLabel = s.cluster ? getClusterLabel(s.cluster) : "Unknown"
   const clusterValue = s.cluster ?? "Unknown"
-  const subjects = [...new Set(
-    s.Combinations.flatMap((c) => [] as string[]) // subjects come from combination profile
-  )]
+  const subjects = [...new Set(s.Combinations.flatMap((c) => c.Subjects?.map((subject) => subject.name) ?? []))]
 
   return {
     id: s.id,
@@ -50,7 +49,8 @@ function adaptSchool(s: School, index: number) {
     gender: s.gender ?? "Unknown",
     accommodation: s.accommodationType ?? "Unknown",
     subjects,
-    matchPercentage: undefined,
+    matchPercentage: s.score,
+    matchReasons: s.matchReasons,
   }
 }
 
@@ -64,14 +64,20 @@ function FindSchoolsInner() {
   const initialCounties = searchParams.get("county")
     ? [searchParams.get("county") as string]
     : []
-  const initialSubjects = searchParams.get("subjects")
-    ? searchParams.get("subjects")!.split(",")
-    : []
+  const initialSubjects = useMemo(
+    () => (searchParams.get("subjects") ? searchParams.get("subjects")!.split(",") : []),
+    [searchParams]
+  )
   const initialCluster = searchParams.get("cluster") ?? ""
   const initialGender = searchParams.get("gender") ?? ""
+  const initialSearch = searchParams.get("search") ?? ""
+  const initialRecommendedCombinationIds = searchParams.get("recommendedCombinationIds") ?? ""
+  const initialPreferredTrack = searchParams.get("preferredTrack") ?? ""
 
   // ── Filter state ──
   const [searchCounty, setSearchCounty] = useState("")
+  const [schoolSearch, setSchoolSearch] = useState(initialSearch)
+  const [debouncedSchoolSearch, setDebouncedSchoolSearch] = useState(initialSearch)
   const [selectedCounties, setSelectedCounties] = useState<string[]>(initialCounties)
   const [selectedClusters, setSelectedClusters] = useState<string[]>(
     initialCluster ? [initialCluster] : []
@@ -94,16 +100,27 @@ function FindSchoolsInner() {
   // ── Refs to avoid double-fetch on mount ──
   const isMounted = useRef(false)
 
+  const hasRecommendationContext = initialRecommendedCombinationIds.length > 0 || initialSubjects.length > 0
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSchoolSearch(schoolSearch.trim()), 350)
+    return () => window.clearTimeout(timeout)
+  }, [schoolSearch])
+
   // ── Sync filters to URL ──
   const syncUrl = useCallback(() => {
     const params = new URLSearchParams()
+    if (debouncedSchoolSearch) params.set("search", debouncedSchoolSearch)
     if (selectedCounties[0]) params.set("county", selectedCounties[0])
     if (selectedClusters[0]) params.set("cluster", selectedClusters[0])
     const gender = selectedGenders.find((g) => g !== "Any")
     if (gender) params.set("gender", gender)
+    if (initialSubjects.length > 0) params.set("subjects", initialSubjects.join(","))
+    if (initialRecommendedCombinationIds) params.set("recommendedCombinationIds", initialRecommendedCombinationIds)
+    if (initialPreferredTrack) params.set("preferredTrack", initialPreferredTrack)
     const qs = params.toString()
     router.replace(qs ? `/find-schools?${qs}` : "/find-schools", { scroll: false })
-  }, [router, selectedCounties, selectedClusters, selectedGenders])
+  }, [debouncedSchoolSearch, initialPreferredTrack, initialRecommendedCombinationIds, initialSubjects, router, selectedCounties, selectedClusters, selectedGenders])
 
   // ── Build API query ──
   const buildApiQuery = useCallback(
@@ -114,15 +131,20 @@ function FindSchoolsInner() {
       const cluster = selectedClusters[0] ?? undefined
 
       return buildQuery({
+        search: debouncedSchoolSearch,
         page: p,
         limit: LIMIT,
         county,
         gender,
         accommodation,
         category: cluster,
+        cluster,
+        subjects: initialSubjects,
+        recommendedCombinationIds: initialRecommendedCombinationIds,
+        preferredTrack: initialPreferredTrack,
       })
     },
-    [selectedCounties, selectedClusters, selectedGenders, selectedAccommodations]
+    [debouncedSchoolSearch, initialPreferredTrack, initialRecommendedCombinationIds, initialSubjects, selectedCounties, selectedClusters, selectedGenders, selectedAccommodations]
   )
 
   // ── Fetch schools ──
@@ -162,7 +184,7 @@ function FindSchoolsInner() {
     })
     syncUrl()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCounties, selectedClusters, selectedGenders, selectedAccommodations])
+  }, [debouncedSchoolSearch, selectedCounties, selectedClusters, selectedGenders, selectedAccommodations])
 
   // ── Toggle helper ──
   const toggleFilter = (
@@ -186,6 +208,8 @@ function FindSchoolsInner() {
 
   const clearAll = () => {
     setSearchCounty("")
+    setSchoolSearch("")
+    setDebouncedSchoolSearch("")
     setSelectedCounties([])
     setSelectedClusters([])
     setSelectedGenders(["Any"])
@@ -338,6 +362,27 @@ function FindSchoolsInner() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col gap-6 bg-card p-4 sm:p-6 rounded-2xl border border-border shadow-sm">
+          {hasRecommendationContext && (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800/50 dark:bg-blue-950/30">
+              <p className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                Showing schools based on your recommendation preferences
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {initialRecommendedCombinationIds && <Badge className="bg-card text-blue-600 dark:text-blue-300">Recommended match</Badge>}
+                {initialSubjects.length > 0 && <Badge className="bg-card text-blue-600 dark:text-blue-300">Matches your subjects</Badge>}
+              </div>
+            </div>
+          )}
+
+          <div className="relative">
+            <HugeiconsIcon icon={Search02Icon} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80" size={18} />
+            <Input
+              value={schoolSearch}
+              onChange={(event) => setSchoolSearch(event.target.value)}
+              placeholder="Search schools by name or county..."
+              className="h-12 rounded-xl border-border bg-background pl-10 font-medium"
+            />
+          </div>
 
           {/* Mobile Filters Trigger */}
           <div className="flex lg:hidden w-full items-center justify-between">

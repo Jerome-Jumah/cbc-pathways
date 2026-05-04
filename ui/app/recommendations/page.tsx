@@ -4,9 +4,10 @@ import { NavBar } from "@/components/nav-bar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { TurnstileWidget } from "@/components/security/turnstile-widget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { COUNTY_OPTIONS } from "@/constants/filter-options"
-import { ApiError, apiPost } from "@/lib/api-client"
+import { ApiError, apiPost, buildQuery } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
 import type { RecommendationResult } from "@/types/api"
 import {
@@ -29,7 +30,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from 'next/link'
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 const SUBJECTS = [
   { id: "biology", label: "Biology", icon: Plant01Icon, color: "text-green-600 border-green-200", bg: "bg-green-50" },
@@ -73,6 +74,17 @@ export default function RecommendationsPage() {
   const [recResults, setRecResults] = useState<RecommendationResult | null>(null);
   const [recLoading, setRecLoading] = useState(false);
   const [recError, setRecError] = useState<string | null>(null);
+  const [humanVerified, setHumanVerified] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void apiPost<{ success: boolean; data: { verifiedHuman: boolean } }>("/session/init", {})
+      .then((res) => setHumanVerified(res.data.verifiedHuman))
+      .catch(() => {
+        // Public browsing still works; protected action will explain verification if needed.
+      });
+  }, []);
 
   const toggleSubject = (id: string) => {
     setSelectedSubjects(prev =>
@@ -90,18 +102,21 @@ export default function RecommendationsPage() {
     setPreferences(prev => ({ ...prev, [key]: value }));
   };
 
-  const fetchRecommendations = async () => {
+  const preferredSubjects = useMemo(() => {
+    const subjectMap: Record<string, string> = {
+      biology: "BIOLOGY", chemistry: "CHEMISTRY", physics: "PHYSICS",
+      mathematics: "MATHEMATICS", english: "ENGLISH", kiswahili: "KISWAHILI",
+      history: "HISTORY", geography: "GEOGRAPHY", cre: "CRE",
+      business: "BUSINESS STUDIES", agriculture: "AGRICULTURE", computer: "COMPUTER STUDIES",
+    };
+    return selectedSubjects.map(s => subjectMap[s] ?? s.toUpperCase());
+  }, [selectedSubjects]);
+
+  const fetchRecommendations = useCallback(async () => {
+    if (!humanVerified) return;
     setRecLoading(true);
     setRecError(null);
     try {
-      // Map lowercase subject IDs to uppercase for the API
-      const subjectMap: Record<string, string> = {
-        biology: "BIOLOGY", chemistry: "CHEMISTRY", physics: "PHYSICS",
-        mathematics: "MATHEMATICS", english: "ENGLISH", kiswahili: "KISWAHILI",
-        history: "HISTORY", geography: "GEOGRAPHY", cre: "CRE",
-        business: "BUSINESS STUDIES", agriculture: "AGRICULTURE", computer: "COMPUTER STUDIES",
-      };
-      const preferredSubjects = selectedSubjects.map(s => subjectMap[s] ?? s.toUpperCase());
       const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
       const body: Record<string, unknown> = { preferredSubjects };
       if (countyOption) body.preferredCounty = countyOption.value;
@@ -116,12 +131,36 @@ export default function RecommendationsPage() {
     } finally {
       setRecLoading(false);
     }
-  };
+  }, [humanVerified, preferredSubjects, preferences.location]);
+
+  const verifyHuman = useCallback(async (token: string) => {
+    setVerificationLoading(true);
+    setVerificationError(null);
+    try {
+      const res = await apiPost<{ success: boolean; data: { verifiedHuman: boolean } }>("/security/verify-human", { token });
+      setHumanVerified(res.data.verifiedHuman);
+      if (res.data.verifiedHuman) {
+        setRecLoading(true);
+        const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+        const body: Record<string, unknown> = { preferredSubjects };
+        if (countyOption) body.preferredCounty = countyOption.value;
+        const recommendations = await apiPost<{ status: string; data: RecommendationResult }>("/recommendations", body);
+        setRecResults(recommendations.data);
+        setRecError(null);
+      }
+    } catch (err) {
+      setVerificationError(err instanceof ApiError ? err.message : "Human verification failed. Please try again.");
+      setRecError(err instanceof ApiError ? err.message : "Failed to get recommendations.");
+    } finally {
+      setVerificationLoading(false);
+      setRecLoading(false);
+    }
+  }, [preferences.location, preferredSubjects]);
 
   const handleNext = () => {
     if (currentStep === 3) {
       setCurrentStep(4);
-      fetchRecommendations();
+      if (humanVerified) void fetchRecommendations();
     } else {
       setCurrentStep(prev => Math.min(4, prev + 1));
     }
@@ -133,6 +172,7 @@ export default function RecommendationsPage() {
     setSelectedInterests([]);
     setRecResults(null);
     setRecError(null);
+    setVerificationError(null);
     setPreferences({
       location: "",
       environment: "Co-ed",
@@ -142,6 +182,19 @@ export default function RecommendationsPage() {
       budget: "Any budget"
     });
   };
+
+  const exploreMoreSchoolsHref = useMemo(() => {
+    const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+    const recommendedCombinationIds = recResults?.pathwayRecommendations.slice(0, 8).map(combo => combo.id) ?? [];
+    return `/find-schools${buildQuery({
+      subjects: preferredSubjects,
+      interests: selectedInterests,
+      county: countyOption?.value,
+      gender: preferences.environment !== "Co-ed" ? preferences.environment : undefined,
+      recommendedCombinationIds,
+      preferredTrack: recResults?.pathwayRecommendations[0]?.track?.name,
+    })}`;
+  }, [preferredSubjects, preferences.environment, preferences.location, recResults, selectedInterests]);
 
   const renderStepIcon = (stepNum: number, label: string) => {
     const isActive = currentStep === stepNum;
@@ -592,6 +645,23 @@ export default function RecommendationsPage() {
                 <p className="text-lg font-medium text-muted-foreground">Based on your selected subjects and preferences.</p>
               </div>
 
+              {!humanVerified && (
+                <Card className="mx-auto mb-8 flex w-full max-w-xl flex-col items-center rounded-2xl border-border p-6 text-center shadow-sm">
+                  <h2 className="mb-2 text-lg font-bold text-foreground">Verify to generate recommendations</h2>
+                  <p className="mb-5 text-sm font-medium text-muted-foreground">
+                    This protects the recommendation engine from automated abuse while keeping school browsing public.
+                  </p>
+                  <TurnstileWidget
+                    onVerify={verifyHuman}
+                    onExpire={() => setVerificationError("Verification expired. Please try again.")}
+                    onError={() => setVerificationError("Verification could not load. Please try again.")}
+                    className="w-full"
+                  />
+                  {verificationLoading && <p className="mt-3 text-sm font-medium text-muted-foreground">Verifying…</p>}
+                  {verificationError && <p className="mt-3 text-sm font-semibold text-red-600">{verificationError}</p>}
+                </Card>
+              )}
+
               {recLoading && (
                 <div className="flex flex-col items-center justify-center py-20">
                   <div className="w-12 h-12 border-4 border-blue-200 dark:border-blue-800/50 border-t-blue-600 rounded-full animate-spin mb-4" />
@@ -599,7 +669,7 @@ export default function RecommendationsPage() {
                 </div>
               )}
 
-              {!recLoading && recError && (
+              {humanVerified && !recLoading && recError && (
                 <div className="flex flex-col items-center justify-center py-12 bg-red-50 rounded-2xl border border-red-100 text-center mb-8">
                   <HugeiconsIcon icon={InformationCircleIcon} size={32} className="text-red-400 mb-3" />
                   <p className="font-bold text-red-700 mb-1">Could not load recommendations</p>
@@ -608,7 +678,7 @@ export default function RecommendationsPage() {
                 </div>
               )}
 
-              {!recLoading && !recError && recResults && (
+              {humanVerified && !recLoading && !recError && recResults && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <Card className="flex flex-col p-6 rounded-2xl border-border shadow-sm">
                     <h3 className="font-bold text-foreground mb-6">Recommended Combinations</h3>
@@ -653,16 +723,16 @@ export default function RecommendationsPage() {
                         </div>
                       ))}
                     </div>
-                    <Link href="/find-schools" className="mt-6">
+                    <Link href={exploreMoreSchoolsHref} className="mt-6">
                       <Button variant="outline" className="w-full bg-card text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 hover:bg-accent font-semibold rounded-xl h-11">
-                        View all schools <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-2" />
+                        Explore more schools <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-2" />
                       </Button>
                     </Link>
                   </Card>
                 </div>
               )}
 
-              {!recLoading && !recError && !recResults && (
+              {humanVerified && !recLoading && !recError && !recResults && (
                 <div className="flex flex-col items-center justify-center py-16 text-center mb-8">
                   <p className="text-muted-foreground text-sm">No results yet.</p>
                 </div>

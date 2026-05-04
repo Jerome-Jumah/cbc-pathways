@@ -25,8 +25,10 @@ export interface TrackRef {
 }
 
 export interface CombinationRef {
+  id?: string;
   code: string;
   track: TrackRef;
+  Subjects?: SubjectRef[];
 }
 
 // ─── Schools ──────────────────────────────────────────────────────────────────
@@ -40,6 +42,8 @@ export interface School {
   category: string | null;
   accommodationType: string | null;
   Combinations: CombinationRef[];
+  score?: number;
+  matchReasons?: string[];
 }
 
 export interface SchoolsListResponse {

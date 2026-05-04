@@ -29,6 +29,7 @@ async function request<T>(
   let res: Response;
   try {
     res = await fetch(url, {
+      credentials: "include",
       ...init,
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +44,11 @@ async function request<T>(
     let message = `Request failed with status ${res.status}`;
     try {
       const body = await res.json();
-      if (body?.error?.message) message = body.error.message;
+      if (body?.error?.message) {
+        message = body.error.message;
+      } else if (body?.message) {
+        message = body.message;
+      }
     } catch {
       // ignore JSON parse errors on error bodies
     }
