@@ -1,5 +1,6 @@
 "use client"
 
+import { BookmarkButton } from "@/components/bookmark-button"
 import { NavBar } from "@/components/nav-bar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -193,6 +194,19 @@ export default function ExploreTracksPage() {
                     style.color
                   )}
                 >
+                  <BookmarkButton
+                    item={{
+                      id: track.id,
+                      type: "track",
+                      title: track.name,
+                      subtitle: track.pathway,
+                      href: `/explore-tracks/${track.id}`,
+                    }}
+                    showLabel={false}
+                    variant="ghost"
+                    className="absolute right-4 top-4 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-300"
+                  />
+
                   {/* Top Left Number Badge */}
                   <div className="w-6 h-6 rounded-full bg-card flex items-center justify-center text-[11px] font-bold shadow-sm text-muted-foreground mb-6">
                     {idx + 1}

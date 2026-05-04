@@ -1,6 +1,8 @@
 "use client"
 
+import { BookmarkButton } from "@/components/bookmark-button"
 import { NavBar } from "@/components/nav-bar"
+import { ShareButton } from "@/components/share-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -23,7 +25,6 @@ import {
   RouteIcon,
   Search01Icon,
   Settings01Icon,
-  Share01Icon,
   Task01Icon,
   TestTube01Icon, UserGroupIcon,
   Wrench01Icon
@@ -195,6 +196,16 @@ export default function RecommendationsPage() {
       preferredTrack: recResults?.pathwayRecommendations[0]?.track?.name,
     })}`;
   }, [preferredSubjects, preferences.environment, preferences.location, recResults, selectedInterests]);
+
+  const recommendationResultsShareHref = useMemo(() => {
+    const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+    return `/recommendations/results${buildQuery({
+      subjects: preferredSubjects,
+      interests: selectedInterests,
+      county: countyOption?.value,
+      gender: preferences.environment !== "Co-ed" ? preferences.environment : undefined,
+    })}`;
+  }, [preferredSubjects, preferences.environment, preferences.location, selectedInterests]);
 
   const renderStepIcon = (stepNum: number, label: string) => {
     const isActive = currentStep === stepNum;
@@ -686,17 +697,33 @@ export default function RecommendationsPage() {
                       {recResults.pathwayRecommendations.length === 0 && (
                         <p className="text-sm text-muted-foreground">No combinations found for your subjects.</p>
                       )}
-                      {recResults.pathwayRecommendations.map((combo, idx) => (
-                        <Link key={combo.id} href={`/combination/${combo.id}`}
-                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors group">
-                          <div className="w-6 h-6 rounded bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 dark:text-blue-300 text-xs font-bold shrink-0">{idx + 1}</div>
-                          <span className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors flex-1 min-w-0 truncate">
-                            {combo.Subjects.map(s => s.name).join(", ")}
-                          </span>
-                          {idx === 0 && <Badge variant="secondary" className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-300 font-bold border-none shrink-0">Best Match</Badge>}
-                          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-300 shrink-0">{combo.matchScore}%</span>
-                        </Link>
-                      ))}
+                      {recResults.pathwayRecommendations.map((combo, idx) => {
+                        const title = combo.Subjects.map(s => s.name).join(", ")
+                        return (
+                          <div key={combo.id} className="flex items-center gap-2 rounded-xl hover:bg-muted transition-colors group">
+                            <Link href={`/combination/${combo.id}`} className="flex min-w-0 flex-1 items-center gap-3 p-3">
+                              <div className="w-6 h-6 rounded bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 dark:text-blue-300 text-xs font-bold shrink-0">{idx + 1}</div>
+                              <span className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors flex-1 min-w-0 truncate">
+                                {title}
+                              </span>
+                              {idx === 0 && <Badge variant="secondary" className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-300 font-bold border-none shrink-0">Best Match</Badge>}
+                              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-300 shrink-0">{combo.matchScore}%</span>
+                            </Link>
+                            <BookmarkButton
+                              item={{
+                                id: combo.id,
+                                type: "combination",
+                                title,
+                                subtitle: `${combo.track.name} · ${combo._count.Schools} schools`,
+                                href: `/combination/${combo.id}`,
+                              }}
+                              showLabel={false}
+                              variant="ghost"
+                              className="mr-2 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-300"
+                            />
+                          </div>
+                        )
+                      })}
                     </div>
                     <Link href="/explore-tracks" className="mt-6">
                       <Button variant="outline" className="w-full bg-card text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 hover:bg-accent font-semibold rounded-xl h-11">
@@ -739,12 +766,13 @@ export default function RecommendationsPage() {
               )}
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-auto">
-                <Button variant="outline" className="w-full sm:w-auto bg-card text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 hover:bg-accent font-semibold rounded-xl h-11 px-8">
-                  <HugeiconsIcon icon={FavouriteIcon} size={18} className="mr-2" /> Save Results
-                </Button>
-                <Button variant="outline" className="w-full sm:w-auto bg-card text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 hover:bg-accent font-semibold rounded-xl h-11 px-8">
-                  <HugeiconsIcon icon={Share01Icon} size={18} className="mr-2" /> Share Results
-                </Button>
+                <ShareButton
+                  title="CBC Pathways recommendation results"
+                  text="Open these CBC subject recommendation inputs."
+                  url={recommendationResultsShareHref}
+                  label="Share Results"
+                  className="w-full sm:w-auto bg-card text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 hover:bg-accent font-semibold rounded-xl h-11 px-8"
+                />
                 <Button onClick={handleReset} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl h-11 px-8 shadow-sm">
                   <HugeiconsIcon icon={Search01Icon} size={18} className="mr-2" /> Start New Search
                 </Button>

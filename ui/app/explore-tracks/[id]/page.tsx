@@ -1,6 +1,8 @@
 "use client"
 
+import { BookmarkButton } from "@/components/bookmark-button"
 import { NavBar } from "@/components/nav-bar"
+import { ShareButton } from "@/components/share-button"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,7 +12,7 @@ import { cn } from "@/lib/utils"
 import type { CombinationsListResponse, SubjectCombination, Track, TrackResponse } from "@/types/api"
 import {
   ArrowLeft01Icon, ArrowRight01Icon,
-  Book01Icon, BookmarkAdd01Icon,
+  Book01Icon,
   Building03Icon,
   ChartBarLineIcon,
   FavouriteIcon,
@@ -166,6 +168,13 @@ export default function TrackCombinationsPage() {
 
   const trackStyle = track ? getTrackStyle(track.name) : getTrackStyle("")
   const careerPathways = track?.profile?.careerPathways ?? []
+  const trackSavedItem = track ? {
+    id: track.id,
+    type: "track" as const,
+    title: track.name,
+    subtitle: track.pathway,
+    href: `/explore-tracks/${track.id}`,
+  } : null
 
   if (trackLoading) {
     return (
@@ -263,6 +272,19 @@ export default function TrackCombinationsPage() {
               <p className="text-sm text-muted-foreground leading-relaxed font-medium">
                 {track.profile?.shortDescription ?? `Explore subject combinations under ${track.name} and discover the right path for your future goals.`}
               </p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                {trackSavedItem && (
+                  <BookmarkButton
+                    item={trackSavedItem}
+                    className="rounded-xl border-border bg-card text-foreground hover:bg-muted"
+                  />
+                )}
+                <ShareButton
+                  title={`${track.name} Track`}
+                  text={`Explore ${track.name} subject combinations on CBC Pathways.`}
+                  className="rounded-xl border-border bg-card text-foreground hover:bg-muted"
+                />
+              </div>
             </div>
             {/* Hero illustration */}
             <div className={cn("w-36 h-36 shrink-0 rounded-full flex items-center justify-center ring-8", trackStyle.bg, trackStyle.ring)}>
@@ -400,9 +422,18 @@ export default function TrackCombinationsPage() {
                         View Details <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                       </Button>
                     </Link>
-                    <button className="p-1.5 text-muted-foreground/60 hover:text-muted-foreground transition-colors">
-                      <HugeiconsIcon icon={BookmarkAdd01Icon} size={18} />
-                    </button>
+                    <BookmarkButton
+                      item={{
+                        id: combo.id,
+                        type: "combination",
+                        title: combo.Subjects.map((s) => s.name).join(", "),
+                        subtitle: `${track.name} · ${combo._count?.Schools ?? 0} schools`,
+                        href: `/combination/${combo.id}`,
+                      }}
+                      showLabel={false}
+                      variant="ghost"
+                      className="text-muted-foreground/60 hover:text-blue-600 dark:hover:text-blue-300"
+                    />
                   </div>
                 </div>
               ))}

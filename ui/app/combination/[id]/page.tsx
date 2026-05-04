@@ -1,6 +1,8 @@
 "use client"
 
+import { BookmarkButton } from "@/components/bookmark-button"
 import { NavBar } from "@/components/nav-bar"
+import { ShareButton } from "@/components/share-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -116,6 +118,14 @@ export default function CombinationDetailsPage() {
   const subjectList = combination?.subjects ?? []
   const careerPathways = profile?.careerPathways ?? []
   const keyBenefits = profile?.keyBenefits ?? []
+  const combinationTitle = combination?.subjects.join(", ") ?? "Combination Profile"
+  const combinationSavedItem = combination ? {
+    id: combination.id,
+    type: "combination" as const,
+    title: combinationTitle,
+    subtitle: `${combination.track} · ${combination.schoolCount} schools`,
+    href: `/combination/${combination.id}`,
+  } : null
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col items-center pb-20">
@@ -196,6 +206,20 @@ export default function CombinationDetailsPage() {
                 <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-medium px-3 py-1">
                   {combination.pathway}
                 </Badge>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 mb-8">
+                {combinationSavedItem && (
+                  <BookmarkButton
+                    item={combinationSavedItem}
+                    className="rounded-xl border-border text-foreground hover:bg-muted"
+                  />
+                )}
+                <ShareButton
+                  title={combinationTitle}
+                  text={`View this CBC subject combination on CBC Pathways.`}
+                  className="rounded-xl border-border text-foreground hover:bg-muted"
+                />
               </div>
 
               {/* Mini Stats */}
