@@ -496,7 +496,7 @@ export default function SchoolDetailsPage() {
           <h3 className="font-bold text-foreground">At a glance</h3>
 
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-[28px_110px_1fr] items-start text-sm">
+            <div className="grid grid-cols-[28px_minmax(130px,160px)_minmax(0,1fr)] items-start gap-x-3 text-sm">
               <HugeiconsIcon icon={Location01Icon} size={16} className="text-muted-foreground/80 mt-0.5" />
               <span className="font-semibold text-foreground">County</span>
               <span className="text-muted-foreground font-medium">{school.county}</span>
@@ -504,7 +504,7 @@ export default function SchoolDetailsPage() {
             <Separator className="bg-muted" />
             {school.cluster && (
               <>
-                <div className="grid grid-cols-[28px_110px_1fr] items-start text-sm">
+                <div className="grid grid-cols-[28px_minmax(130px,160px)_minmax(0,1fr)] items-start gap-x-3 text-sm">
                   <HugeiconsIcon icon={Task01Icon} size={16} className="text-muted-foreground/80 mt-0.5" />
                   <span className="font-semibold text-foreground">Cluster</span>
                   <span className="text-muted-foreground font-medium">{school.cluster} ({clusterLabel})</span>
@@ -514,7 +514,7 @@ export default function SchoolDetailsPage() {
             )}
             {school.gender && (
               <>
-                <div className="grid grid-cols-[28px_110px_1fr] items-start text-sm">
+                <div className="grid grid-cols-[28px_minmax(130px,160px)_minmax(0,1fr)] items-start gap-x-3 text-sm">
                   <HugeiconsIcon icon={UserGroupIcon} size={16} className="text-muted-foreground/80 mt-0.5" />
                   <span className="font-semibold text-foreground">Gender</span>
                   <span className="text-muted-foreground font-medium">{school.gender}</span>
@@ -524,7 +524,7 @@ export default function SchoolDetailsPage() {
             )}
             {school.accommodationType && (
               <>
-                <div className="grid grid-cols-[28px_110px_1fr] items-start text-sm">
+                <div className="grid grid-cols-[28px_minmax(130px,160px)_minmax(0,1fr)] items-start gap-x-3 text-sm">
                   <HugeiconsIcon icon={Building03Icon} size={16} className="text-muted-foreground/80 mt-0.5" />
                   <span className="font-semibold text-foreground">Accommodation</span>
                   <span className="text-muted-foreground font-medium">{school.accommodationType}</span>
@@ -532,7 +532,7 @@ export default function SchoolDetailsPage() {
                 <Separator className="bg-muted" />
               </>
             )}
-            <div className="grid grid-cols-[28px_110px_1fr] items-start text-sm">
+            <div className="grid grid-cols-[28px_minmax(130px,160px)_minmax(0,1fr)] items-start gap-x-3 text-sm">
               <HugeiconsIcon icon={Book01Icon} size={16} className="text-muted-foreground/80 mt-0.5" />
               <span className="font-semibold text-foreground">Combinations</span>
               <span className="text-muted-foreground font-medium">{combosLoading ? "…" : totalCombinations}</span>

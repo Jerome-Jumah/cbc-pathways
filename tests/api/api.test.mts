@@ -12,6 +12,18 @@ async function request(path: string, init?: RequestInit) {
   return { res, body };
 }
 
+async function verifiedHeaders() {
+  const init = await request("/api/session/init", { method: "POST" });
+  const cookie = init.res.headers.get("set-cookie")?.split(";")[0] ?? "";
+  const verified = await request("/api/security/verify-human", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: cookie },
+    body: JSON.stringify({ token: "dev-turnstile-token" }),
+  });
+  const verifiedCookie = verified.res.headers.get("set-cookie")?.split(";")[0] ?? cookie;
+  return { Cookie: verifiedCookie, "Content-Type": "application/json" };
+}
+
 function assertSafeError(body: unknown) {
   const text = JSON.stringify(body);
   assert.match(text, /error/i);
@@ -57,7 +69,7 @@ describe("track profiles", () => {
 
 describe("schools", () => {
   it("supports pagination and filters without returning the whole dataset", async () => {
-    for (const query of ["?page=1&limit=20", "?county=NAIROBI&page=1&limit=20", "?cluster=C2&page=1&limit=20", "?gender=BOYS&page=1&limit=20"]) {
+    for (const query of ["?page=1&limit=20", "?county=NAIROBI&page=1&limit=20", "?cluster=C2&page=1&limit=20", "?gender=BOYS&page=1&limit=20", "?search=alliance&page=1&limit=20"]) {
       const { res, body } = await request(`/api/schools${query}`);
       assert.equal(res.status, 200);
       assert.equal(body.success, true);
@@ -66,7 +78,60 @@ describe("schools", () => {
       assert.equal(body.data.meta.page, 1);
       assert.equal(body.data.meta.limit, 20);
       assert.equal(typeof body.data.meta.total, "number");
+      assert.equal(body.pagination.page, 1);
     }
+  });
+
+  it("ranks schools by recommendation context", async () => {
+    const combinations = await request("/api/combinations?page=1&limit=1");
+    const combo = combinations.body.data.data[0];
+    const { res, body } = await request(`/api/schools?recommendedCombinationIds=${combo.id}&page=1&limit=20`);
+    assert.equal(res.status, 200);
+    assert.equal(body.success, true);
+    assert.ok(body.data.data.length > 0);
+    assert.ok(body.data.data[0].score >= 0);
+    assert.ok(Array.isArray(body.data.data[0].matchReasons));
+  });
+
+  it("finds ranked schools from recommendation subjects and track context", async () => {
+    const combinations = await request("/api/combinations?track=Pure%20Sciences&page=1&limit=5");
+    const recommendedIds = combinations.body.data.data.map((combo: any) => combo.id).join(",");
+    const { res, body } = await request(
+      `/api/schools?subjects=CHEMISTRY,PHYSICS,MATHEMATICS&recommendedCombinationIds=${recommendedIds}&preferredTrack=Pure%20Sciences&page=1&limit=20`,
+    );
+
+    assert.equal(res.status, 200);
+    assert.equal(body.success, true);
+    assert.ok(Array.isArray(body.data.data));
+    assert.ok(body.data.data.length > 0);
+    assert.ok(body.data.data.length <= 20);
+    assert.ok(body.data.data.every((school: any) => Array.isArray(school.matchReasons)));
+  });
+
+  it("combines recommendation context with explicit school filters", async () => {
+    const combinations = await request("/api/combinations?track=Pure%20Sciences&page=1&limit=5");
+    const recommendedIds = combinations.body.data.data.map((combo: any) => combo.id).join(",");
+    const baseQuery = `/api/schools?subjects=CHEMISTRY,PHYSICS,MATHEMATICS&recommendedCombinationIds=${recommendedIds}&preferredTrack=Pure%20Sciences&page=1&limit=20`;
+    const initial = await request(baseQuery);
+    const referenceSchool = initial.body.data.data[0];
+    const filtered = await request(`${baseQuery}&county=${encodeURIComponent(referenceSchool.county)}&gender=${encodeURIComponent(referenceSchool.gender)}`);
+
+    assert.equal(filtered.res.status, 200);
+    assert.ok(filtered.body.data.data.length > 0);
+    assert.ok(filtered.body.data.data.every((school: any) => school.county.toLowerCase() === referenceSchool.county.toLowerCase()));
+    assert.ok(filtered.body.data.data.every((school: any) => school.gender.toLowerCase() === referenceSchool.gender.toLowerCase()));
+  });
+
+  it("sorts schools with user-facing sort options", async () => {
+    const combinations = await request("/api/combinations?track=Pure%20Sciences&page=1&limit=5");
+    const recommendedIds = combinations.body.data.data.map((combo: any) => combo.id).join(",");
+    const byCounty = await request(
+      `/api/schools?subjects=CHEMISTRY,PHYSICS,MATHEMATICS&recommendedCombinationIds=${recommendedIds}&preferredTrack=Pure%20Sciences&sort=county&page=1&limit=20`,
+    );
+    const counties = byCounty.body.data.data.map((school: any) => school.county.toLowerCase());
+
+    assert.equal(byCounty.res.status, 200);
+    assert.deepEqual(counties, [...counties].sort((a, b) => a.localeCompare(b)));
   });
 
   it("returns school profile shape and clean errors", async () => {
@@ -124,7 +189,7 @@ describe("combinations", () => {
     }
 
     const stored = await request(`/api/combinations/${profiled.id}/profile`);
-    const generated = await request(`/api/combinations/${profiled.id}/profile?generate=true`);
+    const generated = await request(`/api/combinations/${profiled.id}/profile?generate=true`, { headers: await verifiedHeaders() });
     assert.equal(stored.res.status, 200);
     assert.equal(generated.res.status, 200);
     assert.equal(stored.body.data.generated, false);
@@ -136,10 +201,36 @@ describe("combinations", () => {
 });
 
 describe("recommendations and debug", () => {
+  it("initializes sessions and verifies humans", async () => {
+    const init = await request("/api/session/init", { method: "POST" });
+    assert.equal(init.res.status, 200);
+    assert.equal(init.body.success, true);
+    assert.match(init.res.headers.get("set-cookie") ?? "", /cbc_session=/);
+
+    const cookie = init.res.headers.get("set-cookie")?.split(";")[0] ?? "";
+    const verified = await request("/api/security/verify-human", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookie },
+      body: JSON.stringify({ token: "dev-turnstile-token" }),
+    });
+    assert.equal(verified.res.status, 200);
+    assert.equal(verified.body.data.verifiedHuman, true);
+  });
+
+  it("rejects expensive actions without human verification", async () => {
+    const invalid = await request("/api/recommendations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subjects: ["Biology", "Chemistry"] }),
+    });
+    assert.equal(invalid.res.status, 403);
+    assert.equal(invalid.body.code, "HUMAN_VERIFICATION_REQUIRED");
+  });
+
   it("returns stable recommendation shape and validates empty input", async () => {
     const valid = await request("/api/recommendations", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await verifiedHeaders(),
       body: JSON.stringify({ subjects: ["Biology", "Chemistry"], county: "NAIROBI", gender: "BOYS" }),
     });
     assert.equal(valid.res.status, 200);
@@ -149,7 +240,7 @@ describe("recommendations and debug", () => {
 
     const invalid = await request("/api/recommendations", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await verifiedHeaders(),
       body: JSON.stringify({ subjects: [] }),
     });
     assert.equal(invalid.res.status, 400);

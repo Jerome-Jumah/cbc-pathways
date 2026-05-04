@@ -24,6 +24,7 @@ export interface School {
   accommodation: string
   subjects: string[]
   matchPercentage?: number
+  matchReasons?: string[]
 }
 
 interface SchoolCardProps {
@@ -132,6 +133,11 @@ export function SchoolCard({ school }: SchoolCardProps) {
 
           {/* Subjects */}
           <div className="flex flex-wrap items-center gap-2 mt-4">
+            {school.matchReasons?.slice(0, 2).map((reason) => (
+              <Badge key={reason} variant="secondary" className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300 border-none font-semibold px-3 py-1 rounded-full">
+                {reason}
+              </Badge>
+            ))}
             {visibleSubjects.map((subject, idx) => (
               <Badge key={idx} variant="secondary" className="bg-muted text-muted-foreground hover:bg-muted border-none font-medium px-3 py-1 rounded-full">
                 {subject}
