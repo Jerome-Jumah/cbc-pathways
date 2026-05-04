@@ -108,6 +108,32 @@ describe("schools", () => {
     assert.ok(body.data.data.every((school: any) => Array.isArray(school.matchReasons)));
   });
 
+  it("combines recommendation context with explicit school filters", async () => {
+    const combinations = await request("/api/combinations?track=Pure%20Sciences&page=1&limit=5");
+    const recommendedIds = combinations.body.data.data.map((combo: any) => combo.id).join(",");
+    const baseQuery = `/api/schools?subjects=CHEMISTRY,PHYSICS,MATHEMATICS&recommendedCombinationIds=${recommendedIds}&preferredTrack=Pure%20Sciences&page=1&limit=20`;
+    const initial = await request(baseQuery);
+    const referenceSchool = initial.body.data.data[0];
+    const filtered = await request(`${baseQuery}&county=${encodeURIComponent(referenceSchool.county)}&gender=${encodeURIComponent(referenceSchool.gender)}`);
+
+    assert.equal(filtered.res.status, 200);
+    assert.ok(filtered.body.data.data.length > 0);
+    assert.ok(filtered.body.data.data.every((school: any) => school.county.toLowerCase() === referenceSchool.county.toLowerCase()));
+    assert.ok(filtered.body.data.data.every((school: any) => school.gender.toLowerCase() === referenceSchool.gender.toLowerCase()));
+  });
+
+  it("sorts schools with user-facing sort options", async () => {
+    const combinations = await request("/api/combinations?track=Pure%20Sciences&page=1&limit=5");
+    const recommendedIds = combinations.body.data.data.map((combo: any) => combo.id).join(",");
+    const byCounty = await request(
+      `/api/schools?subjects=CHEMISTRY,PHYSICS,MATHEMATICS&recommendedCombinationIds=${recommendedIds}&preferredTrack=Pure%20Sciences&sort=county&page=1&limit=20`,
+    );
+    const counties = byCounty.body.data.data.map((school: any) => school.county.toLowerCase());
+
+    assert.equal(byCounty.res.status, 200);
+    assert.deepEqual(counties, [...counties].sort((a, b) => a.localeCompare(b)));
+  });
+
   it("returns school profile shape and clean errors", async () => {
     const list = await request("/api/schools?page=1&limit=1");
     assert.ok(list.body.data.data.length > 0);
