@@ -1,12 +1,18 @@
 import { z, ZodError } from "zod";
 
 export const getSchoolsQuerySchema = z.object({
+  search: z.string().optional(),
   track: z.string().optional(),
   county: z.string().optional(),
   gender: z.string().optional(),
   accommodation: z.string().optional(),
   category: z.string().optional(),
   cluster: z.string().optional(),
+  preferredTrack: z.string().optional(),
+  recommendedCombinationIds: z
+    .string()
+    .optional()
+    .transform(val => (val ? val.split(",").map(s => s.trim()).filter(Boolean) : [])),
   // Expecting a comma-separated list of subjects from the query string
   subjects: z
     .string()
