@@ -28,6 +28,7 @@ const envSchema = z
       .default(15 * 60 * 1000),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
     SESSION_SECRET: z.string().optional(),
+    SESSION_COOKIE_SAME_SITE: z.preprocess(value => (value === "" ? undefined : value), z.enum(["lax", "none", "strict"]).optional()),
     TURNSTILE_SECRET_KEY: z.string().optional(),
     GEMINI_API_KEY: z.string().optional(),
     LOG_FILE: z.string().optional(),

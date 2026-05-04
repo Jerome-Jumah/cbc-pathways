@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { STATUS_CODES } from "../constants/index.mjs";
+import logger from "../constants/logger.mjs";
 import {
   createAnonymousSession,
   getSessionFromCookie,
@@ -30,6 +31,14 @@ export function requireHumanVerification(req: RequestWithSession, res: Response,
     next();
     return;
   }
+
+  logger.warn("Human verification required for protected endpoint", {
+    path: req.originalUrl,
+    method: req.method,
+    hasCookieHeader: Boolean(req.headers.cookie),
+    hasSession: Boolean(req.anonymousSession),
+    verifiedHuman: req.anonymousSession?.verifiedHuman === true,
+  });
 
   res.status(STATUS_CODES.FORBIDDEN).json({
     success: false,
