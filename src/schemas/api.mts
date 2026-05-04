@@ -9,6 +9,7 @@ export const getSchoolsQuerySchema = z.object({
   category: z.string().optional(),
   cluster: z.string().optional(),
   preferredTrack: z.string().optional(),
+  sort: z.enum(["relevance", "name", "county"]).default("name"),
   recommendedCombinationIds: z
     .string()
     .optional()

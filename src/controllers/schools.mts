@@ -5,7 +5,7 @@ import { getSchoolsQuerySchema, getCombinationsBySchoolParamsSchema, getCombinat
 export async function getSchools(req: Request, res: Response, next: NextFunction) {
   try {
     const validated = getSchoolsQuerySchema.parse(req.query);
-    const { search, track, county, gender, accommodation, subjects, limit, page, category, cluster, preferredTrack, recommendedCombinationIds } = validated;
+    const { search, track, county, gender, accommodation, subjects, limit, page, category, cluster, preferredTrack, recommendedCombinationIds, sort } = validated;
 
     const data = await getSchoolsHandler({
       search,
@@ -18,6 +18,7 @@ export async function getSchools(req: Request, res: Response, next: NextFunction
       cluster,
       preferredTrack,
       recommendedCombinationIds,
+      sort,
       limit: +limit,
       page: +page,
     });
