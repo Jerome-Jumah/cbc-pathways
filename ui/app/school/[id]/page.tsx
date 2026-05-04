@@ -1,6 +1,8 @@
 "use client"
 
+import { BookmarkButton } from "@/components/bookmark-button"
 import { NavBar } from "@/components/nav-bar"
+import { ShareButton } from "@/components/share-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -20,7 +22,6 @@ import {
   Book01Icon,
   Building03Icon,
   CheckmarkCircle01Icon,
-  FavouriteIcon,
   Home01Icon,
   Idea01Icon,
   Image01Icon,
@@ -29,7 +30,6 @@ import {
   RefreshIcon,
   RouteIcon,
   Settings01Icon,
-  Share01Icon,
   Task01Icon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons"
@@ -143,6 +143,13 @@ export default function SchoolDetailsPage() {
   const { school, profile } = data
   const clusterLabel = getClusterLabel(school.cluster)
   const totalCombinations = combos.reduce((acc, t) => acc + t.combinations.length, 0)
+  const schoolSavedItem = {
+    id: school.id,
+    type: "school" as const,
+    title: school.name,
+    subtitle: `${school.county}${school.cluster ? ` · ${school.cluster}` : ""}`,
+    href: `/school/${school.id}`,
+  }
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col items-center">
@@ -193,9 +200,9 @@ export default function SchoolDetailsPage() {
             </Link>
           </div>
 
-          <div className="p-5 rounded-2xl bg-muted border border-border flex flex-row items-center gap-4 cursor-pointer hover:shadow-md transition-shadow">
+          <div className="p-5 rounded-2xl bg-muted border border-border flex flex-row items-center gap-4 hover:shadow-md transition-shadow">
             <div className="w-10 h-10 rounded-full bg-card flex items-center justify-center text-muted-foreground/80 shrink-0 shadow-sm">
-              <HugeiconsIcon icon={FavouriteIcon} size={20} />
+              <BookmarkButton item={schoolSavedItem} showLabel={false} variant="ghost" />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-foreground text-sm">Save this school</span>
@@ -216,10 +223,10 @@ export default function SchoolDetailsPage() {
               </div>
               <p className="text-white/80 text-sm font-semibold">{school.county}</p>
             </div>
-            <Button className="absolute top-4 right-4 bg-card/90 hover:bg-card text-foreground text-sm font-semibold rounded-xl h-10 px-4 shadow-sm backdrop-blur-sm">
-              <HugeiconsIcon icon={FavouriteIcon} size={18} className="mr-2" />
-              Save
-            </Button>
+            <BookmarkButton
+              item={schoolSavedItem}
+              className="absolute top-4 right-4 bg-card/90 hover:bg-card text-foreground text-sm rounded-xl h-10 px-4 shadow-sm backdrop-blur-sm"
+            />
           </div>
 
           {/* School Header Info */}
@@ -280,14 +287,15 @@ export default function SchoolDetailsPage() {
 
           <div className="px-4">
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" className="border-border text-foreground hover:bg-muted font-semibold rounded-xl h-11 px-6 shadow-sm">
-                <HugeiconsIcon icon={Share01Icon} size={18} className="mr-2 text-blue-600 dark:text-blue-300" />
-                Share
-              </Button>
-              <Button variant="outline" className="border-border text-foreground hover:bg-muted font-semibold rounded-xl h-11 px-6 shadow-sm">
-                <HugeiconsIcon icon={FavouriteIcon} size={18} className="mr-2 text-blue-600 dark:text-blue-300" />
-                Save School
-              </Button>
+              <ShareButton
+                title={school.name}
+                text={`View ${school.name} on CBC Pathways.`}
+                className="border-border text-foreground hover:bg-muted font-semibold rounded-xl h-11 px-6 shadow-sm"
+              />
+              <BookmarkButton
+                item={schoolSavedItem}
+                className="border-border text-foreground hover:bg-muted rounded-xl h-11 px-6 shadow-sm"
+              />
             </div>
           </div>
 

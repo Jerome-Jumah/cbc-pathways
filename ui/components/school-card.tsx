@@ -1,53 +1,42 @@
-import React from "react"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Location01Icon,
-  UserGroupIcon,
-  Building03Icon,
-  Favorite,
-  Sun01Icon
-} from "@hugeicons/core-free-icons"
-import Image from "next/image"
-import { cn } from "@/lib/utils"
-import Link from "next/link"
+"use client";
+
+import { BookmarkButton } from "@/components/bookmark-button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Building03Icon, Location01Icon, Sun01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Image from "next/image";
+import Link from "next/link";
+import { useMemo } from "react";
 
 export interface School {
-  id: string
-  rank: number
-  name: string
-  imageUrl?: string
-  location: string
-  cluster: string
-  gender: string
-  accommodation: string
-  subjects: string[]
-  matchPercentage?: number
-  matchReasons?: string[]
+  id: string;
+  rank: number;
+  name: string;
+  imageUrl?: string;
+  location: string;
+  cluster: string;
+  gender: string;
+  accommodation: string;
+  subjects: string[];
+  matchPercentage?: number;
+  matchReasons?: string[];
 }
 
 interface SchoolCardProps {
-  school: School
+  school: School;
 }
 
 const CircularProgress = ({ value }: { value: number }) => {
-  const radius = 24
-  const circumference = 2 * Math.PI * radius
-  const strokeDashoffset = circumference - (value / 100) * circumference
+  const radius = 24;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (value / 100) * circumference;
 
   return (
     <div className="relative flex items-center justify-center">
       <svg className="transform -rotate-90 w-16 h-16">
-        <circle
-          cx="32"
-          cy="32"
-          r={radius}
-          stroke="currentColor"
-          strokeWidth="4"
-          fill="transparent"
-          className="text-muted-foreground/30"
-        />
+        <circle cx="32" cy="32" r={radius} stroke="currentColor" strokeWidth="4" fill="transparent" className="text-muted-foreground/30" />
         <circle
           cx="32"
           cy="32"
@@ -64,8 +53,8 @@ const CircularProgress = ({ value }: { value: number }) => {
         <span className="text-sm font-bold text-foreground">{value}%</span>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export function SchoolCard({ school }: SchoolCardProps) {
   const clusterColors: Record<string, string> = {
@@ -73,30 +62,32 @@ export function SchoolCard({ school }: SchoolCardProps) {
     C2: "text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 bg-card",
     C3: "text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 bg-card",
     C4: "text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 bg-card",
-  }
+  };
 
   // Get first 4 subjects and count the rest
-  const visibleSubjects = school.subjects.slice(0, 4)
-  const remainingSubjects = Math.max(0, school.subjects.length - 4)
+  const visibleSubjects = school.subjects.slice(0, 4);
+  const remainingSubjects = Math.max(0, school.subjects.length - 4);
+  const savedItem = useMemo(
+    () => ({
+      id: school.id,
+      type: "school" as const,
+      title: school.name,
+      subtitle: `${school.location}${school.cluster ? ` · ${school.cluster.split(" ")[0]}` : ""}`,
+      href: `/school/${school.id}`,
+    }),
+    [school.cluster, school.id, school.location, school.name],
+  );
 
   return (
     <Link href={`/school/${school.id}`} className="block">
       <Card className="flex flex-col sm:flex-row p-4 gap-6 rounded-2xl hover:shadow-md transition-shadow border-border bg-card relative">
-        
         {/* Image Section */}
         <div className="relative w-full sm:w-[240px] h-[160px] shrink-0 rounded-xl overflow-hidden bg-muted">
           {school.imageUrl ? (
-            <Image
-              src={school.imageUrl}
-              alt={school.name}
-              fill
-              className="object-cover"
-            />
+            <Image src={school.imageUrl} alt={school.name} fill className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
-              <span className="text-3xl font-extrabold text-muted-foreground/60">
-                {school.name.slice(0, 2).toUpperCase()}
-              </span>
+              <span className="text-3xl font-extrabold text-muted-foreground/60">{school.name.slice(0, 2).toUpperCase()}</span>
             </div>
           )}
           {/* Rank Badge */}
@@ -111,13 +102,19 @@ export function SchoolCard({ school }: SchoolCardProps) {
             <div className="flex justify-between items-start">
               <h3 className="text-lg font-bold text-foreground">{school.name}</h3>
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-sm text-muted-foreground font-medium">
               <div className="flex items-center gap-1.5">
                 <HugeiconsIcon icon={Location01Icon} size={16} className="text-muted-foreground/80" />
                 {school.location}
               </div>
-              <Badge variant="outline" className={cn("px-2 py-0 h-6 font-semibold border rounded-md", clusterColors[school.cluster.split(" ")[0]] || "text-muted-foreground border-border")}>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "px-2 py-0 h-6 font-semibold border rounded-md",
+                  clusterColors[school.cluster.split(" ")[0]] || "text-muted-foreground border-border",
+                )}
+              >
                 {school.cluster.split(" ")[0]}
               </Badge>
               <div className="flex items-center gap-1.5">
@@ -125,7 +122,11 @@ export function SchoolCard({ school }: SchoolCardProps) {
                 {school.gender}
               </div>
               <div className="flex items-center gap-1.5">
-                <HugeiconsIcon icon={school.accommodation === "Boarding" ? Building03Icon : Sun01Icon} size={16} className="text-muted-foreground/80" />
+                <HugeiconsIcon
+                  icon={school.accommodation === "Boarding" ? Building03Icon : Sun01Icon}
+                  size={16}
+                  className="text-muted-foreground/80"
+                />
                 {school.accommodation}
               </div>
             </div>
@@ -133,18 +134,29 @@ export function SchoolCard({ school }: SchoolCardProps) {
 
           {/* Subjects */}
           <div className="flex flex-wrap items-center gap-2 mt-4">
-            {school.matchReasons?.slice(0, 2).map((reason) => (
-              <Badge key={reason} variant="secondary" className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300 border-none font-semibold px-3 py-1 rounded-full">
+            {school.matchReasons?.slice(0, 2).map(reason => (
+              <Badge
+                key={reason}
+                variant="secondary"
+                className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300 border-none font-semibold px-3 py-1 rounded-full"
+              >
                 {reason}
               </Badge>
             ))}
             {visibleSubjects.map((subject, idx) => (
-              <Badge key={idx} variant="secondary" className="bg-muted text-muted-foreground hover:bg-muted border-none font-medium px-3 py-1 rounded-full">
+              <Badge
+                key={idx}
+                variant="secondary"
+                className="bg-muted text-muted-foreground hover:bg-muted border-none font-medium px-3 py-1 rounded-full"
+              >
                 {subject}
               </Badge>
             ))}
             {remainingSubjects > 0 && (
-              <Badge variant="secondary" className="bg-muted text-muted-foreground hover:bg-muted border-none font-medium px-3 py-1 rounded-full">
+              <Badge
+                variant="secondary"
+                className="bg-muted text-muted-foreground hover:bg-muted border-none font-medium px-3 py-1 rounded-full"
+              >
                 +{remainingSubjects}
               </Badge>
             )}
@@ -153,10 +165,13 @@ export function SchoolCard({ school }: SchoolCardProps) {
 
         {/* Match Percentage & Actions */}
         <div className="flex flex-col items-center justify-between sm:w-24 shrink-0 border-l border-border pl-4">
-          <button onClick={(e) => { e.preventDefault(); /* handle favorite toggle */ }} className="self-end text-muted-foreground/80 hover:text-red-500 transition-colors p-1">
-            <HugeiconsIcon icon={Favorite} size={20} />
-          </button>
-          
+          <BookmarkButton
+            item={savedItem}
+            showLabel={false}
+            variant="ghost"
+            className="self-end text-muted-foreground/80 hover:text-blue-600 dark:hover:text-blue-300"
+          />
+
           {school.matchPercentage !== undefined && (
             <div className="flex flex-col items-center mb-2">
               <CircularProgress value={school.matchPercentage} />
@@ -164,8 +179,7 @@ export function SchoolCard({ school }: SchoolCardProps) {
             </div>
           )}
         </div>
-
       </Card>
     </Link>
-  )
+  );
 }

@@ -3,7 +3,7 @@
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { HeartAddIcon, Menu01Icon } from "@hugeicons/core-free-icons"
+import { Bookmark01Icon, Menu01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import Link from "next/link"
@@ -39,8 +39,10 @@ export function NavBar() {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-5">
-          <Button variant="ghost" size="icon" className="text-muted-foreground/80 hover:text-black rounded-full h-10 w-10 dark:hover:text-foreground">
-            <HugeiconsIcon icon={HeartAddIcon} size={40} />
+          <Button variant="ghost" size="icon" asChild className="text-muted-foreground/80 hover:text-black rounded-full h-10 w-10 dark:hover:text-foreground">
+            <Link href="/saved" aria-label="Saved items">
+              <HugeiconsIcon icon={Bookmark01Icon} size={40} />
+            </Link>
           </Button>
           <ThemeSwitcher />
         </div>
@@ -73,6 +75,9 @@ export function NavBar() {
                   </Link>
                   <Link href="/recommendations" className="px-4 py-3 rounded-lg font-semibold text-foreground hover:bg-muted flex items-center gap-3 dark:text-foreground dark:hover:bg-accent">
                     Recommendations
+                  </Link>
+                  <Link href="/saved" className="px-4 py-3 rounded-lg font-semibold text-foreground hover:bg-muted flex items-center gap-3 dark:text-foreground dark:hover:bg-accent">
+                    Saved Items
                   </Link>
                   <Link href="/about" className="px-4 py-3 rounded-lg font-semibold text-foreground hover:bg-muted flex items-center gap-3 dark:text-foreground dark:hover:bg-accent">
                     About Mwalimu
