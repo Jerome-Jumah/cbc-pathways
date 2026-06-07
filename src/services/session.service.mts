@@ -13,6 +13,13 @@ export const SESSION_COOKIE_NAME = "cbc_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const DEV_SECRET = "cbc-pathways-development-session-secret-change-in-production";
 
+function sameSiteValue() {
+  const configured = env.SESSION_COOKIE_SAME_SITE ?? (isProduction ? "none" : "lax");
+  if (configured === "none") return "None";
+  if (configured === "strict") return "Strict";
+  return "Lax";
+}
+
 function key() {
   return createHash("sha256").update(env.SESSION_SECRET ?? DEV_SECRET).digest();
 }
@@ -77,10 +84,10 @@ export function setSessionCookie(res: Response, session: AnonymousSession) {
     "HttpOnly",
     "Path=/",
     `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
-    "SameSite=Lax",
+    `SameSite=${sameSiteValue()}`,
   ];
 
-  if (isProduction) parts.push("Secure");
+  if (isProduction || sameSiteValue() === "None") parts.push("Secure");
 
   res.setHeader("Set-Cookie", parts.join("; "));
 }
