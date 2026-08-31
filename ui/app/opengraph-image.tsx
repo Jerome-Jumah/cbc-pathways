@@ -115,7 +115,7 @@ export default async function Image() {
             fontSize: "18px",
           }}
         >
-          cbcpathways.co.ke
+          cbc-pathways.code4flare.com
         </div>
       </div>
     ),

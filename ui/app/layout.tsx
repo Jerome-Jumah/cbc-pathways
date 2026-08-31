@@ -112,7 +112,16 @@ export default function RootLayout({
               © {new Date().getFullYear()} CBC Pathways. All rights reserved.
             </p>
             <p className="font-semibold text-muted-foreground">
-              Designed and developed by Jerome.
+              Designed and developed by{" "}
+              <a
+                href="https://code4flare.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-foreground hover:underline"
+              >
+                Code4Flare
+              </a>
+              .
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -127,8 +136,8 @@ export default function RootLayout({
                 <span className="sr-only">WhatsApp</span>
               </a>
               <a
-                href="mailto:owinojumahjerome@gmail.com"
-                aria-label="Email Jerome"
+                href="mailto:hell@code4flare.com"
+                aria-label="Email Code4Flare"
                 title="Email"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-blue-200 dark:hover:border-blue-800/50 hover:bg-accent hover:text-blue-600 dark:hover:text-blue-300"
               >

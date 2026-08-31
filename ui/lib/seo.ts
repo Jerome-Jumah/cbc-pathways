@@ -5,7 +5,7 @@
 
 export const siteConfig = {
   name: "CBC Pathways",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://cbcpathways.co.ke",
+  url: "https://cbc-pathways.code4flare.com",
   description:
     "Explore CBC senior school pathways, subject combinations, tracks, and schools in Kenya. Find the right combination and schools based on your interests, subjects, and preferences.",
   keywords: [
