@@ -118,7 +118,7 @@ export default function RecommendationsPage() {
     setRecLoading(true);
     setRecError(null);
     try {
-      const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+      const countyOption = COUNTY_OPTIONS.find(c => c.value === preferences.location);
       const body: Record<string, unknown> = { preferredSubjects };
       if (countyOption) body.preferredCounty = countyOption.value;
 
@@ -142,7 +142,7 @@ export default function RecommendationsPage() {
       setHumanVerified(res.data.verifiedHuman);
       if (res.data.verifiedHuman) {
         setRecLoading(true);
-        const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+        const countyOption = COUNTY_OPTIONS.find(c => c.value === preferences.location);
         const body: Record<string, unknown> = { preferredSubjects };
         if (countyOption) body.preferredCounty = countyOption.value;
         const recommendations = await apiPost<{ status: string; data: RecommendationResult }>("/recommendations", body);
@@ -185,7 +185,7 @@ export default function RecommendationsPage() {
   };
 
   const exploreMoreSchoolsHref = useMemo(() => {
-    const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+    const countyOption = COUNTY_OPTIONS.find(c => c.value === preferences.location);
     const recommendedCombinationIds = recResults?.pathwayRecommendations.slice(0, 8).map(combo => combo.id) ?? [];
     return `/find-schools${buildQuery({
       subjects: preferredSubjects,
@@ -198,7 +198,7 @@ export default function RecommendationsPage() {
   }, [preferredSubjects, preferences.environment, preferences.location, recResults, selectedInterests]);
 
   const recommendationResultsShareHref = useMemo(() => {
-    const countyOption = COUNTY_OPTIONS.find(c => c.label === preferences.location);
+    const countyOption = COUNTY_OPTIONS.find(c => c.value === preferences.location);
     return `/recommendations/results${buildQuery({
       subjects: preferredSubjects,
       interests: selectedInterests,
@@ -314,7 +314,10 @@ export default function RecommendationsPage() {
             <div>
               <span className="text-sm font-semibold text-foreground mb-2 block">Preferences</span>
               <div className="flex flex-col gap-2 text-sm text-muted-foreground font-medium">
-                <div className="flex items-center gap-2"><HugeiconsIcon icon={Location01Icon} size={16} /> {preferences.location}</div>
+                <div className="flex items-center gap-2">
+                  <HugeiconsIcon icon={Location01Icon} size={16} />
+                  {COUNTY_OPTIONS.find(c => c.value === preferences.location)?.label ?? preferences.location}
+                </div>
                 <div className="flex items-center gap-2"><HugeiconsIcon icon={Building03Icon} size={16} /> {preferences.classSize}</div>
                 <div className="flex items-center gap-2"><HugeiconsIcon icon={UserGroupIcon} size={16} /> {preferences.environment}</div>
                 <div className="flex items-center gap-2"><HugeiconsIcon icon={RouteIcon} size={16} /> {preferences.accommodation}</div>
@@ -510,9 +513,11 @@ export default function RecommendationsPage() {
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
-                        <SelectItem value="Nairobi County">Nairobi County</SelectItem>
-                        <SelectItem value="Kiambu County">Kiambu County</SelectItem>
-                        <SelectItem value="Nakuru County">Nakuru County</SelectItem>
+                        {COUNTY_OPTIONS.map(county => (
+                          <SelectItem key={county.value} value={county.value}>
+                            {county.label} County
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
