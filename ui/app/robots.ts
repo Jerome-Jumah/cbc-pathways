@@ -1,9 +1,10 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/seo";
 
 /**
- * Next.js App Router robots.txt.
- * Generates /robots.txt automatically.
+ * Next.js App Router robots.txt generator.
+ * Explicitly allows crawlable content pages while blocking faceted filter parameters,
+ * private session URLs, and internal API routes.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -12,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: [
           "/",
+          "/grade-10-subject-combinations",
           "/explore-tracks",
           "/explore-tracks/",
           "/find-schools",
@@ -25,13 +27,13 @@ export default function robots(): MetadataRoute.Robots {
           "/debug/",
           "/admin/",
           "/_next/",
-          // Prevent indexing filter permutations on find-schools
+          // Prevent crawling duplicate faceted query variations
           "/find-schools?*",
-          // Recommendation result sessions are private
+          // Recommendations session queries
           "/recommendations?*",
         ],
       },
-      // Block common crawlers from hitting the API
+      // Block AI scraping bot per established project policy
       {
         userAgent: "GPTBot",
         disallow: ["/"],
