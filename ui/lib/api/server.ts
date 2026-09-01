@@ -226,8 +226,17 @@ export async function getCombinationProfile(
     );
     return res.data ?? null;
   } catch (err) {
-    if (err instanceof ApiError && (err.status === 404 || err.status === 400)) {
-      return { found: false, combinationExists: true };
+    if (err instanceof ApiError && err.status === 404) {
+      // Differentiate: combination exists without profile vs nonexistent combination
+      const isPendingProfile =
+        err.message.includes("No profile found") ||
+        err.message.includes("?generate=true") ||
+        err.message.includes("generate one");
+
+      if (isPendingProfile) {
+        return { found: false, combinationExists: true };
+      }
+      return null;
     }
     throw err;
   }

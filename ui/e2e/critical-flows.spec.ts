@@ -435,10 +435,21 @@ test("school detail", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Pure Sciences" })).toBeVisible();
 });
 
-test("combination detail", async ({ page }) => {
+test("combination detail with profile", async ({ page }) => {
   await page.goto("/combination/00000000-0000-4000-8000-000000000301");
   await expect(page.getByText("Health sciences pathway")).toBeVisible();
   await expect(page.getByRole("heading", { name: /Schools Offering/ })).toBeVisible();
+});
+
+test("combination detail pending state without profile", async ({ page }) => {
+  await page.goto("/combination/00000000-0000-4000-8000-000000000302");
+  await expect(page.getByText(/Generate Profile Insights/i)).toBeVisible();
+});
+
+test("nonexistent combination returns 404", async ({ page }) => {
+  const response = await page.goto("/combination/00000000-0000-0000-0000-000000000000");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByText(/could not be found|not found/i)).toBeVisible();
 });
 
 test("recommendation", async ({ page }) => {

@@ -6,16 +6,17 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:8080/api";
 
-const BATCH_SIZE = 1000;
-const MAX_SCHOOL_PAGES = 10; // Supports up to 10,000 schools in a single sitemap file (limit is 50,000)
+const SCHOOLS_PAGE_LIMIT = 1000;
+const COMBINATIONS_PAGE_LIMIT = 100;
+const MAX_SITEMAP_URLS = 45000; // Safe upper bound below Google's 50,000 URL ceiling
 
 /**
  * Next.js App Router comprehensive sitemap.
  * Generates canonical URLs for:
  * 1. Static landing and informational pages
  * 2. All 7 CBC Tracks
- * 3. All verified Subject Combinations
- * 4. All 10,000+ Senior Schools
+ * 3. All verified Subject Combinations (paginated across all pages)
+ * 4. All Senior Schools (paginated across all pages without an arbitrary 10-page ceiling)
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
@@ -76,50 +77,95 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // fallback gracefully if API is offline
   }
 
-  // 3. Combination pages
-  let combinationPages: MetadataRoute.Sitemap = [];
+  // 3. Subject Combination pages (metadata-driven pagination)
+  const combinationPages: MetadataRoute.Sitemap = [];
   try {
-    const res = await fetch(`${BASE_URL}/combinations?limit=1000`, {
-      next: { revalidate: 3600 },
-    });
-    if (res.ok) {
+    let page = 1;
+    let totalPages = 1;
+
+    while (
+      page <= totalPages &&
+      staticPages.length + trackPages.length + combinationPages.length < MAX_SITEMAP_URLS
+    ) {
+      const res = await fetch(
+        `${BASE_URL}/combinations?page=${page}&limit=${COMBINATIONS_PAGE_LIMIT}`,
+        { next: { revalidate: 3600 } },
+      );
+      if (!res.ok) break;
+
       const body = await res.json();
-      const combos = (body.data?.data as Array<{ id: string }>) ?? [];
-      combinationPages = combos.map((c) => ({
-        url: `${baseUrl}/combination/${c.id}`,
-        lastModified: now,
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-      }));
+      const rawData = body?.data?.data ?? body?.data;
+      const combos = (Array.isArray(rawData) ? rawData : []) as Array<{ id: string }>;
+      const meta = body?.data?.meta ?? body?.meta;
+
+      if (meta?.totalPages && typeof meta.totalPages === "number") {
+        totalPages = meta.totalPages;
+      }
+
+      for (const c of combos) {
+        if (c?.id) {
+          combinationPages.push({
+            url: `${baseUrl}/combination/${c.id}`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.8,
+          });
+        }
+      }
+
+      if (combos.length === 0 || combos.length < COMBINATIONS_PAGE_LIMIT) {
+        break;
+      }
+      page++;
     }
   } catch {
     // fallback gracefully if API is offline
   }
 
-  // 4. School detail pages (batched up to 10,000 schools)
+  // 4. School detail pages (metadata-driven pagination without arbitrary 10k ceiling)
   const schoolPages: MetadataRoute.Sitemap = [];
   try {
-    for (let page = 1; page <= MAX_SCHOOL_PAGES; page++) {
-      const res = await fetch(`${BASE_URL}/schools?page=${page}&limit=${BATCH_SIZE}`, {
-        next: { revalidate: 3600 },
-      });
+    let page = 1;
+    let totalPages = 1;
+
+    while (
+      page <= totalPages &&
+      staticPages.length +
+        trackPages.length +
+        combinationPages.length +
+        schoolPages.length <
+        MAX_SITEMAP_URLS
+    ) {
+      const res = await fetch(
+        `${BASE_URL}/schools?page=${page}&limit=${SCHOOLS_PAGE_LIMIT}`,
+        { next: { revalidate: 3600 } },
+      );
       if (!res.ok) break;
 
       const body = await res.json();
-      const schools = (body.data?.data as Array<{ id: string }>) ?? [];
-      if (schools.length === 0) break;
+      const rawData = body?.data?.data ?? body?.data;
+      const schools = (Array.isArray(rawData) ? rawData : []) as Array<{ id: string }>;
+      const meta = body?.data?.meta ?? body?.meta;
 
-      for (const s of schools) {
-        schoolPages.push({
-          url: `${baseUrl}/school/${s.id}`,
-          lastModified: now,
-          changeFrequency: "weekly" as const,
-          priority: 0.8,
-        });
+      if (meta?.totalPages && typeof meta.totalPages === "number") {
+        totalPages = meta.totalPages;
       }
 
-      // If returned less than full batch size, we've reached the last page
-      if (schools.length < BATCH_SIZE) break;
+      for (const s of schools) {
+        if (s?.id) {
+          schoolPages.push({
+            url: `${baseUrl}/school/${s.id}`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.8,
+          });
+        }
+      }
+
+      if (schools.length === 0 || schools.length < SCHOOLS_PAGE_LIMIT) {
+        break;
+      }
+      page++;
     }
   } catch {
     // fallback gracefully if API is offline

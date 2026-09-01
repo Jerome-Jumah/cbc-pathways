@@ -90,36 +90,58 @@ const server = http.createServer((req, res) => {
   }
 
   // Combination profile
-  if (/\/api\/combinations\/[^/]+\/profile$/.test(pathname)) {
-    return json({
-      success: true,
-      data: {
-        found: true,
-        generated: false,
-        combination: {
-          id: ids.combo,
-          code: "PCB",
-          subjects: ["Biology", "Chemistry"],
-          track: "Pure Sciences",
-          pathway: "STEM",
-          schoolCount: 1,
+  const comboProfileMatch = pathname.match(/\/api\/combinations\/([^/]+)\/profile$/);
+  if (comboProfileMatch) {
+    const requestedId = comboProfileMatch[1];
+    if (requestedId === ids.combo) {
+      return json({
+        success: true,
+        data: {
+          found: true,
+          generated: false,
+          combination: {
+            id: ids.combo,
+            code: "PCB",
+            subjects: ["Biology", "Chemistry"],
+            track: "Pure Sciences",
+            pathway: "STEM",
+            schoolCount: 1,
+          },
+          profile: {
+            id: "p1",
+            combinationId: ids.combo,
+            overview: "Health sciences pathway",
+            bestFor: "Science learners",
+            difficultyLevel: "Medium",
+            careerPathways: ["Medicine"],
+            keyBenefits: ["Strong science base"],
+            subjectDetails: [],
+            generatedBy: "test",
+            promptVersion: "test",
+            createdAt: "",
+            updatedAt: "",
+          },
         },
-        profile: {
-          id: "p1",
-          combinationId: ids.combo,
-          overview: "Health sciences pathway",
-          bestFor: "Science learners",
-          difficultyLevel: "Medium",
-          careerPathways: ["Medicine"],
-          keyBenefits: ["Strong science base"],
-          subjectDetails: [],
-          generatedBy: "test",
-          promptVersion: "test",
-          createdAt: "",
-          updatedAt: "",
+      });
+    }
+
+    if (requestedId === "00000000-0000-4000-8000-000000000302") {
+      return json(
+        {
+          success: false,
+          message: `No profile found for combination '${requestedId}'. Add ?generate=true to generate one.`,
         },
+        404,
+      );
+    }
+
+    return json(
+      {
+        success: false,
+        message: `Combination with id '${requestedId}' not found.`,
       },
-    });
+      404,
+    );
   }
 
   // Single track profile
