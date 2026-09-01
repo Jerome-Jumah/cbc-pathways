@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { siteConfig } from "@/lib/seo";
 import { JsonLd, websiteSchema } from "@/lib/structured-data";
+import { cn } from "@/lib/utils";
 import {
   ArrowRight01Icon,
   ArrowUp01Icon,

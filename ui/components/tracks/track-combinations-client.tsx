@@ -49,7 +49,7 @@ interface TrackCombinationsClientProps {
   initialCombinations: SubjectCombination[];
   initialTotal: number;
   trackStyle: {
-    icon: any;
+    icon: Parameters<typeof HugeiconsIcon>[0]["icon"];
     color: string;
     bg: string;
     ring: string;

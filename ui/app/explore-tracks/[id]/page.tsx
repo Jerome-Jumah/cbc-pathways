@@ -126,7 +126,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${track.name} CBC Track & Subject Combinations | CBC Pathways`;
+  const title = `${track.name} CBC Track & Subject Combinations`;
   const description =
     track.profile?.shortDescription ??
     `Explore ${track.name} subject combinations, career prospects, and schools under the ${track.pathway} pathway in Kenya.`;

@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const { school } = data;
-  const title = `${school.name} CBC Subject Combinations | CBC Pathways`;
+  const title = `${school.name} CBC Subject Combinations`;
   const description = `Explore CBC pathways, tracks and Grade 10 subject combinations offered at ${school.name} in ${school.county} County, Kenya.`;
   const url = `${siteConfig.url}/school/${school.id}`;
 

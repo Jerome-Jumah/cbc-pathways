@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const pathway = data?.combination?.pathway ?? "CBC Pathway";
   const schoolCount = data?.combination?.schoolCount ?? 0;
 
-  const title = `${subjectsLabel} CBC Combination | CBC Pathways`;
+  const title = `${subjectsLabel} CBC Combination`;
   const description = `Explore the ${subjectsLabel} Grade 10 CBC subject combination under the ${track} track (${pathway}), career options, and ${schoolCount}+ schools offering it in Kenya.`;
   const url = `${siteConfig.url}/combination/${id}`;
 

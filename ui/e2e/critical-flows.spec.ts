@@ -21,6 +21,15 @@ async function mockApi(page: Page) {
           });
 
         const pathname = new URL(url, window.location.origin).pathname;
+        if (pathname.endsWith("/api/session/init") || pathname.endsWith("/api/session/verify-turnstile")) {
+          return json({
+            success: true,
+            data: {
+              verifiedHuman: true,
+              csrfToken: "mock-csrf-token",
+            },
+          });
+        }
         if (/\/api\/schools\/[^/]+\/profile$/.test(pathname)) {
           return json({
             success: true,

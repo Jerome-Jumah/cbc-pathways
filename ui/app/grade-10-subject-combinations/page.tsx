@@ -7,6 +7,7 @@ import { getTracks } from "@/lib/api/server";
 import { siteConfig } from "@/lib/seo";
 import { breadcrumbSchema, JsonLd } from "@/lib/structured-data";
 import { cn } from "@/lib/utils";
+import type { Track } from "@/types/api";
 import {
   ArrowRight01Icon,
   Book01Icon,
@@ -26,7 +27,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Grade 10 Subject Combinations in Kenya | CBC Pathways",
+  title: "Grade 10 Subject Combinations in Kenya",
   description:
     "Comprehensive guide to Grade 10 CBC subject combinations, senior school pathways, tracks, and school selection in Kenya.",
   keywords: [
@@ -130,7 +131,12 @@ const PATHWAY_EXPLANATIONS = [
 ];
 
 export default async function Grade10CombinationsPage() {
-  const tracks = await getTracks();
+  let tracks: Track[] = [];
+  try {
+    tracks = await getTracks();
+  } catch {
+    tracks = [];
+  }
 
   const breadcrumbData = breadcrumbSchema([
     { name: "Home", url: siteConfig.url },

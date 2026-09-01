@@ -79,8 +79,14 @@ export function FindSchoolsClient({
 }: FindSchoolsInitialProps) {
   const router = useRouter();
 
-  const initialCounties = initialParams.county ? [initialParams.county] : [];
-  const initialSubjects = initialParams.subjects ?? [];
+  const initialCounties = React.useMemo(
+    () => (initialParams.county ? [initialParams.county] : []),
+    [initialParams.county],
+  );
+  const initialSubjects = React.useMemo(
+    () => initialParams.subjects ?? [],
+    [initialParams.subjects],
+  );
   const initialCluster = initialParams.cluster ?? "";
   const initialGender = initialParams.gender ?? "";
   const initialAccommodation = initialParams.accommodation ?? "";

@@ -4,7 +4,8 @@ import path from "node:path";
 export default defineConfig({
   test: {
     environment: "jsdom",
-    exclude: ["e2e/**", "node_modules/**", ".next/**"],
+    include: ["test/**/*.{test,spec}.{ts,tsx}"],
+    exclude: ["e2e/**", "node_modules/**", ".next/**", ".*_backup/**"],
     globals: true,
     setupFiles: ["./test/setup.ts"],
   },
