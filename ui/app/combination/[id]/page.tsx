@@ -14,9 +14,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const data = await getCombinationProfile(id, false);
 
-  if (!data?.combination && data?.found === false && data?.combinationExists === false) {
+  if (!data?.combination || data.found === false || data.combinationExists === false) {
     return {
-      title: "Combination Not Found | CBC Pathways",
+      title: "Combination Not Found",
       robots: { index: false, follow: false },
     };
   }

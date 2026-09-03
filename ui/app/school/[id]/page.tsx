@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!data?.school) {
     return {
-      title: "School Not Found | CBC Pathways",
+      title: "School Not Found",
       robots: { index: false, follow: false },
     };
   }

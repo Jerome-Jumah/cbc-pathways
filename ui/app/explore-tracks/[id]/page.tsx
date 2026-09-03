@@ -121,7 +121,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!track) {
     return {
-      title: "Track Not Found | CBC Pathways",
+      title: "Track Not Found",
       robots: { index: false, follow: false },
     };
   }

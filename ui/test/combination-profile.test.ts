@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCombinationProfile } from "@/lib/api/server";
+import { generateMetadata } from "@/app/combination/[id]/page";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -102,5 +103,77 @@ describe("getCombinationProfile 404 & pending semantics", () => {
       status: 500,
       message: "Internal server error",
     });
+  });
+});
+
+describe("combination generateMetadata SEO safety", () => {
+  it("emits non-indexable metadata when combination does not exist (null returned)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          { error: { message: "Combination with id 'missing-id' not found." } },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const meta = await generateMetadata({ params: Promise.resolve({ id: "missing-id" }) });
+    expect(meta.title).toBe("Combination Not Found");
+    expect(meta.robots).toEqual({ index: false, follow: false });
+  });
+
+  it("emits non-indexable metadata when combination exists but profile details are pending", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            error: {
+              message: "No profile found for combination 'pending-id'. Add ?generate=true to generate one.",
+            },
+          },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const meta = await generateMetadata({ params: Promise.resolve({ id: "pending-id" }) });
+    expect(meta.title).toBe("Combination Not Found");
+    expect(meta.robots).toEqual({ index: false, follow: false });
+  });
+
+  it("emits indexable rich metadata when combination has profile", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            success: true,
+            data: {
+              found: true,
+              generated: false,
+              combination: {
+                id: "c1",
+                code: "PCB",
+                subjects: ["Biology", "Chemistry"],
+                track: "Pure Sciences",
+                pathway: "STEM",
+                schoolCount: 10,
+              },
+              profile: {
+                id: "p1",
+                overview: "Health pathway",
+              },
+            },
+          },
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const meta = await generateMetadata({ params: Promise.resolve({ id: "c1" }) });
+    expect(meta.title).toBe("Biology, Chemistry CBC Combination");
+    expect(meta.robots).toEqual({ index: true, follow: true });
   });
 });

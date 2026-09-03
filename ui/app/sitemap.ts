@@ -103,6 +103,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
 
       for (const c of combos) {
+        if (
+          staticPages.length +
+            trackPages.length +
+            combinationPages.length >=
+          MAX_SITEMAP_URLS
+        ) {
+          break;
+        }
         if (c?.id) {
           combinationPages.push({
             url: `${baseUrl}/combination/${c.id}`,
@@ -113,7 +121,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
 
-      if (combos.length === 0 || combos.length < COMBINATIONS_PAGE_LIMIT) {
+      if (
+        combos.length === 0 ||
+        combos.length < COMBINATIONS_PAGE_LIMIT ||
+        staticPages.length +
+          trackPages.length +
+          combinationPages.length >=
+          MAX_SITEMAP_URLS
+      ) {
         break;
       }
       page++;
@@ -152,6 +167,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
 
       for (const s of schools) {
+        if (
+          staticPages.length +
+            trackPages.length +
+            combinationPages.length +
+            schoolPages.length >=
+          MAX_SITEMAP_URLS
+        ) {
+          break;
+        }
         if (s?.id) {
           schoolPages.push({
             url: `${baseUrl}/school/${s.id}`,
@@ -162,7 +186,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
 
-      if (schools.length === 0 || schools.length < SCHOOLS_PAGE_LIMIT) {
+      if (
+        schools.length === 0 ||
+        schools.length < SCHOOLS_PAGE_LIMIT ||
+        staticPages.length +
+          trackPages.length +
+          combinationPages.length +
+          schoolPages.length >=
+          MAX_SITEMAP_URLS
+      ) {
         break;
       }
       page++;
