@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Explore CBC Tracks and Pathways",
+  title: "CBC Tracks and Pathways in Kenya",
   description:
-    "Browse all CBC senior school tracks and pathways in Kenya. Discover Pure Sciences, Applied Sciences, Arts & Sports Science, Social Sciences, and more.",
+    "Explore the 7 CBC senior school tracks in Kenya, their pathways, subject combinations and schools offering each track.",
   keywords: [
     "CBC tracks Kenya",
     "CBC pathways",
@@ -12,15 +12,16 @@ export const metadata: Metadata = {
     "Applied Sciences CBC",
     "Arts Sports Science CBC",
     "Social Sciences CBC",
-    "Technical CBC",
+    "Technical and Engineering CBC",
+    "Senior school tracks Kenya",
   ],
   alternates: {
     canonical: `${siteConfig.url}/explore-tracks`,
   },
   openGraph: {
-    title: "Explore CBC Tracks and Pathways",
+    title: "CBC Tracks and Pathways in Kenya | CBC Pathways",
     description:
-      "Browse all CBC senior school tracks and pathways in Kenya. Discover Pure Sciences, Applied Sciences, Arts & Sports Science, Social Sciences, and more.",
+      "Explore the 7 CBC senior school tracks in Kenya, their pathways, subject combinations and schools offering each track.",
     url: `${siteConfig.url}/explore-tracks`,
   },
 };

@@ -140,4 +140,5 @@ yarn-debug.log*
 yarn-error.log*
 /src/generated/prisma
 spend-share-firebase.json
-/src/generated/prisma
+.*_backup
+
