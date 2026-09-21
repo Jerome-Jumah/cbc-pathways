@@ -1,4 +1,4 @@
-import http from "node:http";
+import http, { type IncomingMessage, type ServerResponse } from "node:http";
 
 const ids = {
   track: "00000000-0000-4000-8000-000000000101",
@@ -6,8 +6,8 @@ const ids = {
   combo: "00000000-0000-4000-8000-000000000301",
 };
 
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
+export const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
+  const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost:8080"}`);
   const pathname = url.pathname;
 
   res.setHeader("Content-Type", "application/json");
@@ -21,18 +21,28 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const json = (data, status = 200) => {
+  const json = (data: unknown, status = 200) => {
     res.writeHead(status);
     res.end(JSON.stringify(data));
   };
 
-  // Session init
+  // Session init / verify-turnstile
   if (pathname.endsWith("/api/session/init") || pathname.endsWith("/api/session/verify-turnstile")) {
     return json({
       success: true,
       data: {
         verifiedHuman: true,
         csrfToken: "mock-csrf-token",
+      },
+    });
+  }
+
+  // Security verify-human
+  if (pathname.endsWith("/api/security/verify-human")) {
+    return json({
+      success: true,
+      data: {
+        verifiedHuman: true,
       },
     });
   }
@@ -126,6 +136,38 @@ const server = http.createServer((req, res) => {
     }
 
     if (requestedId === "00000000-0000-4000-8000-000000000302") {
+      if (url.searchParams.get("generate") === "true") {
+        return json({
+          success: true,
+          data: {
+            found: true,
+            generated: true,
+            combination: {
+              id: "00000000-0000-4000-8000-000000000302",
+              code: "PCM",
+              subjects: ["Physics", "Chemistry", "Mathematics"],
+              track: "Pure Sciences",
+              pathway: "STEM",
+              schoolCount: 1,
+            },
+            profile: {
+              id: "p2",
+              combinationId: "00000000-0000-4000-8000-000000000302",
+              overview: "Engineering and physical sciences pathway",
+              bestFor: "Analytical minds",
+              difficultyLevel: "High",
+              careerPathways: ["Engineering", "Data Science"],
+              keyBenefits: ["Broad technical foundation"],
+              subjectDetails: [],
+              generatedBy: "test",
+              promptVersion: "test",
+              createdAt: "",
+              updatedAt: "",
+            },
+          },
+        });
+      }
+
       return json(
         {
           success: false,

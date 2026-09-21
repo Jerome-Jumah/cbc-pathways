@@ -1,11 +1,13 @@
 "use client";
 
 import { BookmarkButton } from "@/components/bookmark-button";
+import { CombinationProfilePending } from "@/components/combinations/combination-profile-pending";
 import { ShareButton } from "@/components/share-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { apiGet } from "@/lib/api/client";
+import { useHumanVerification } from "@/context/human-verification-context";
+import { ApiError, apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { CombinationProfileData, CombinationProfileResponse } from "@/types/api";
 import {
@@ -16,17 +18,14 @@ import {
   CheckmarkCircle01Icon,
   FavouriteIcon,
   Home01Icon,
-  InformationCircleIcon,
   Layers01Icon,
   Mortarboard01Icon,
-  Plant01Icon,
   RouteIcon,
   Task01Icon,
-  TestTube01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const MENU_ITEMS = [
   { label: "Overview", icon: Home01Icon },
@@ -50,13 +49,19 @@ export function CombinationDetailsClient({
   const [activeTab, setActiveTab] = useState("Overview");
   const [data, setData] = useState<CombinationProfileData>(initialData);
   const [generating, setGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+
+  const { isHumanVerified, openVerificationPrompt } = useHumanVerification();
 
   const combination = data.combination;
   const profile = data.profile;
   const isPending = !profile && (data.found === false || !data.profile);
 
-  const handleGenerateProfile = async () => {
+  const executeGenerationRef = useRef<(() => Promise<void>) | null>(null);
+
+  const executeGeneration = useCallback(async () => {
     setGenerating(true);
+    setGenerationError(null);
     try {
       const res = await apiGet<CombinationProfileResponse>(
         `/combinations/${encodeURIComponent(combinationId)}/profile?generate=true`,
@@ -64,27 +69,63 @@ export function CombinationDetailsClient({
       if (res.data) {
         setData(res.data);
       }
-    } catch {
-      // ignore generation errors on client
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        openVerificationPrompt({
+          title: "Verify to Generate Insights",
+          description:
+            "Please complete verification to generate AI career pathways and subject insights for this combination.",
+          onSuccess: () => {
+            void executeGenerationRef.current?.();
+          },
+        });
+      } else {
+        setGenerationError(
+          err instanceof ApiError ? err.message : "Failed to generate combination profile.",
+        );
+      }
     } finally {
       setGenerating(false);
     }
-  };
+  }, [combinationId, openVerificationPrompt]);
+
+  useEffect(() => {
+    executeGenerationRef.current = executeGeneration;
+  }, [executeGeneration]);
+
+  const handleGenerateClick = useCallback(() => {
+    if (!isHumanVerified) {
+      openVerificationPrompt({
+        title: "Verify to Generate Insights",
+        description:
+          "Please complete verification to generate AI career pathways and subject insights for this combination.",
+        onSuccess: () => {
+          void executeGenerationRef.current?.();
+        },
+      });
+      return;
+    }
+    void executeGeneration();
+  }, [isHumanVerified, openVerificationPrompt, executeGeneration]);
 
   const subjectList = combination?.subjects ?? [];
   const careerPathways = profile?.careerPathways ?? [];
   const keyBenefits = profile?.keyBenefits ?? [];
   const combinationTitle = combination?.subjects.join(", ") ?? "Combination Profile";
 
-  const combinationSavedItem = combination
-    ? {
-        id: combination.id,
-        type: "combination" as const,
-        title: combinationTitle,
-        subtitle: `${combination.track} · ${combination.schoolCount} schools`,
-        href: `/combination/${combination.id}`,
-      }
-    : null;
+  const combinationSavedItem = useMemo(
+    () =>
+      combination
+        ? {
+            id: combination.id,
+            type: "combination" as const,
+            title: combinationTitle,
+            subtitle: `${combination.track} · ${combination.schoolCount} schools`,
+            href: `/combination/${combination.id}`,
+          }
+        : null,
+    [combination, combinationTitle],
+  );
 
   return (
     <>
@@ -100,120 +141,114 @@ export function CombinationDetailsClient({
         </div>
       </div>
 
-      <main className="w-full max-w-[1400px] px-4 md:px-6 py-4 md:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 pb-24">
-        {/* LEFT COLUMN */}
-        <div className="lg:col-span-3 flex flex-col gap-6">
-          {/* Main Icon Card */}
-          <Card className="w-full aspect-square rounded-3xl bg-indigo-50 dark:bg-indigo-950/30 border-none shadow-sm flex items-center justify-center">
-            <HugeiconsIcon
-              icon={TestTube01Icon}
-              size={120}
-              className="text-blue-600 dark:text-blue-300"
-            />
-          </Card>
-
-          {/* Navigation Menu */}
-          <div className="flex flex-col gap-1">
-            {MENU_ITEMS.map((item, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveTab(item.label)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left",
-                  activeTab === item.label
-                    ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                <HugeiconsIcon
-                  icon={item.icon}
-                  size={20}
-                  className={
+      {/* Main Layout */}
+      <main className="w-full max-w-[1400px] px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Sticky Sidebar */}
+        <div className="hidden lg:flex lg:col-span-3 flex-col gap-6 sticky top-24">
+          <Card className="flex flex-col p-4 rounded-2xl border-border shadow-sm">
+            <h3 className="font-bold text-foreground text-sm mb-4 px-3">Quick Navigation</h3>
+            <div className="flex flex-col gap-1">
+              {MENU_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    if (item.label === "Save Combination" && combinationSavedItem) {
+                      // Handled by bookmark button
+                    } else if (
+                      item.label === "Overview" ||
+                      item.label === "Career Pathways" ||
+                      item.label === "Subject Details"
+                    ) {
+                      setActiveTab(item.label);
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left",
                     activeTab === item.label
-                      ? "text-blue-600 dark:text-blue-300"
-                      : "text-muted-foreground"
-                  }
-                />
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Help Box */}
-          <Card className="flex flex-col p-5 rounded-2xl border-border bg-card shadow-sm mt-4">
-            <h4 className="font-bold text-foreground mb-2">Need help choosing?</h4>
-            <p className="text-sm font-medium text-muted-foreground mb-4 leading-relaxed">
-              Get personalized recommendations based on your interests.
-            </p>
-            <Link href="/recommendations">
-              <Button
-                variant="outline"
-                className="w-full bg-card text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 hover:bg-accent hover:text-blue-700 dark:hover:text-blue-300 font-semibold rounded-xl"
-              >
-                Get Recommendations
-              </Button>
-            </Link>
+                      ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <HugeiconsIcon icon={item.icon} size={18} />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
           </Card>
+
+          {/* Action Card */}
+          {combination && (
+            <Card className="flex flex-col p-5 rounded-2xl border-border shadow-sm gap-3">
+              <h4 className="font-bold text-sm text-foreground">Find Schools</h4>
+              <p className="text-xs text-muted-foreground font-medium">
+                Looking for senior schools offering this combination in your county?
+              </p>
+              <Link
+                href={`/find-schools?combinationId=${combination.id}`}
+                className="mt-2 w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-center text-xs font-bold transition-colors"
+              >
+                View Offering Schools
+              </Link>
+            </Card>
+          )}
         </div>
 
-        {/* CENTER COLUMN */}
+        {/* Center Main Content Area */}
         <div className="lg:col-span-6 flex flex-col">
+          {/* Header Card / Hero */}
           {combination ? (
             <>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                  <HugeiconsIcon
-                    icon={TestTube01Icon}
-                    size={20}
-                    className="text-blue-600 dark:text-blue-300"
-                  />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border-none font-bold text-xs uppercase px-3 py-1">
+                    {combination.pathway}
+                  </Badge>
+                  <Badge variant="outline" className="border-border text-muted-foreground font-medium text-xs px-3 py-1">
+                    {combination.track}
+                  </Badge>
                 </div>
-                <h1 className="text-3xl font-extrabold text-foreground">
-                  {combination.subjects.join(", ")}
-                </h1>
+                <div className="flex items-center gap-2">
+                  <ShareButton
+                    title={`${combinationTitle} - CBC Pathways`}
+                    text={`Check out the ${combinationTitle} combination under ${combination.track} on CBC Pathways!`}
+                    className="p-2 border border-border rounded-xl hover:bg-muted text-muted-foreground transition-colors"
+                  />
+                  {combinationSavedItem && (
+                    <BookmarkButton
+                      item={combinationSavedItem}
+                      className="p-2 border border-border rounded-xl hover:bg-muted text-muted-foreground transition-colors"
+                    />
+                  )}
+                </div>
               </div>
 
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-4">
+                {combinationTitle}
+              </h1>
+
+              {/* Subject Tags */}
               <div className="flex flex-wrap gap-2 mb-6">
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-300 border-none font-bold px-3 py-1"
-                >
-                  {combination.track}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="bg-muted text-muted-foreground border-none font-medium px-3 py-1"
-                >
-                  {combination.pathway}
-                </Badge>
+                {subjectList.map((subject, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-foreground text-xs font-bold border border-border"
+                  >
+                    <HugeiconsIcon icon={Book01Icon} size={13} className="text-blue-600 dark:text-blue-300" />
+                    {subject}
+                  </span>
+                ))}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 mb-8">
-                {combinationSavedItem && (
-                  <BookmarkButton
-                    item={combinationSavedItem}
-                    className="rounded-xl border-border text-foreground hover:bg-muted"
-                  />
-                )}
-                <ShareButton
-                  title={combinationTitle}
-                  text={`View this CBC subject combination on CBC Pathways.`}
-                  className="rounded-xl border-border text-foreground hover:bg-muted"
-                />
-              </div>
-
-              {/* Mini Stats */}
-              <div className="flex flex-wrap items-center gap-6 mb-8 text-sm font-semibold">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <HugeiconsIcon
-                    icon={Building03Icon}
-                    size={18}
-                    className="text-blue-600 dark:text-blue-300"
-                  />
-                  <span>{combination.schoolCount} schools offer this</span>
+              {/* Quick Info Badges */}
+              <div className="flex flex-wrap items-center gap-4 py-3 border-y border-border mb-6 text-xs font-semibold text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <HugeiconsIcon icon={Building03Icon} size={16} className="text-blue-600 dark:text-blue-300" />
+                  <span>
+                    <strong className="text-foreground">{combination.schoolCount}</strong> Schools offering
+                  </span>
                 </div>
                 {profile?.difficultyLevel && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
                     <HugeiconsIcon
                       icon={Mortarboard01Icon}
                       size={18}
@@ -255,27 +290,11 @@ export function CombinationDetailsClient({
 
           {/* Profile pending state */}
           {isPending && (
-            <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-5 mb-8">
-              <HugeiconsIcon
-                icon={InformationCircleIcon}
-                size={18}
-                className="text-amber-500 shrink-0 mt-0.5"
-              />
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-bold text-amber-800">Profile insights available on request</p>
-                <p className="text-sm text-amber-700">
-                  Generate instant AI career pathways, difficulty breakdown, and subject insights for this combination.
-                </p>
-                <Button
-                  size="sm"
-                  disabled={generating}
-                  className="self-start mt-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold h-9 px-4"
-                  onClick={handleGenerateProfile}
-                >
-                  {generating ? "Generating…" : "Generate Profile Insights"}
-                </Button>
-              </div>
-            </div>
+            <CombinationProfilePending
+              onGenerate={handleGenerateClick}
+              isGenerating={generating}
+              generationError={generationError}
+            />
           )}
 
           {/* Overview Section */}
@@ -319,7 +338,7 @@ export function CombinationDetailsClient({
                       variant="secondary"
                       className="mt-2 self-start bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-none font-bold text-[10px]"
                     >
-                      {profile.difficultyLevel}
+                      Balanced Workload
                     </Badge>
                   </Card>
                 )}
@@ -327,60 +346,92 @@ export function CombinationDetailsClient({
             </div>
           )}
 
-          {/* Subjects Table */}
-          {subjectList.length > 0 && (
+          {/* Career Pathways */}
+          {careerPathways.length > 0 && (
             <div className="mb-10">
-              <h3 className="text-lg font-bold text-foreground mb-4">
-                Subjects in this Combination
-              </h3>
-              <div className="border border-border rounded-2xl bg-card overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="py-4 px-6 font-semibold text-muted-foreground text-xs tracking-wider uppercase">
-                        Subject
-                      </th>
-                      <th className="py-4 px-6 font-semibold text-muted-foreground text-xs tracking-wider uppercase">
-                        Track
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {subjectList.map((sub, idx) => (
-                      <tr key={idx} className="hover:bg-muted/50 transition-colors">
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-                              <HugeiconsIcon
-                                icon={TestTube01Icon}
-                                size={16}
-                                className="text-blue-600 dark:text-blue-300"
-                              />
-                            </div>
-                            <span className="font-bold text-foreground">{sub}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 font-medium text-muted-foreground">
-                          {combination?.track ?? "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="bg-blue-50 dark:bg-blue-950/30 p-4 border-t border-border flex items-start gap-3">
-                  <HugeiconsIcon
-                    icon={InformationCircleIcon}
-                    size={18}
-                    className="text-blue-600 dark:text-blue-300 mt-0.5 shrink-0"
-                  />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    These subjects form part of the {combination?.track} track under the{" "}
-                    {combination?.pathway} pathway.
-                  </p>
-                </div>
+              <h3 className="text-lg font-bold text-foreground mb-4">Top Career Pathways</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {careerPathways.map((career, idx) => (
+                  <Card
+                    key={idx}
+                    className="p-4 rounded-2xl border-border shadow-sm flex items-center gap-3 bg-card"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 flex items-center justify-center shrink-0">
+                      <HugeiconsIcon icon={RouteIcon} size={20} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-foreground">{career}</span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Direct alignment
+                      </span>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
+
+          {/* Subject Details */}
+          {profile?.subjectDetails && profile.subjectDetails.length > 0 && (
+            <div className="mb-10">
+              <h3 className="text-lg font-bold text-foreground mb-4">Subject Deep Dive</h3>
+              <div className="flex flex-col gap-4">
+                {profile.subjectDetails.map((sub, idx) => (
+                  <Card key={idx} className="p-5 rounded-2xl border-border shadow-sm flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-8 w-8 rounded-lg bg-muted text-foreground flex items-center justify-center font-bold text-xs">
+                          {idx + 1}
+                        </div>
+                        <h4 className="font-bold text-foreground text-sm">{sub.subject}</h4>
+                      </div>
+                      {sub.importance && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-none font-bold text-[11px]"
+                        >
+                          {sub.importance}
+                        </Badge>
+                      )}
+                    </div>
+                    {sub.skillsGained && sub.skillsGained.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {sub.skillsGained.map((skill, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="text-[11px] font-semibold bg-muted text-muted-foreground px-2 py-0.5 rounded-md"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Subject Requirements / Focus */}
+          <div className="mb-10">
+            <h3 className="text-lg font-bold text-foreground mb-4">Academic Requirements</h3>
+            <Card className="p-5 rounded-2xl border-border shadow-sm flex flex-col gap-3 bg-muted/40">
+              <div className="flex items-start gap-3">
+                <HugeiconsIcon
+                  icon={Task01Icon}
+                  size={18}
+                  className="text-blue-600 dark:text-blue-300 shrink-0 mt-0.5"
+                />
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-bold text-foreground">Junior School Performance</span>
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                    Learners are assessed based on KJSEA continuous assessment tests and final national evaluation
+                    with emphasis on matching core subjects.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
 
           {/* Schools offering - crawlable link to find-schools */}
           {combination && (
@@ -413,28 +464,36 @@ export function CombinationDetailsClient({
           )}
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* Right Sticky Column */}
         <div className="lg:col-span-3 flex flex-col gap-6">
-          {/* Top Career Pathways */}
-          {careerPathways.length > 0 && (
+          {/* Related Tracks / Combinations */}
+          {combination?.track && (
             <Card className="flex flex-col p-6 rounded-2xl border-border shadow-sm">
-              <h3 className="font-bold text-foreground mb-5">Top Career Pathways</h3>
-              <div className="flex flex-col gap-4">
-                {careerPathways.map((path, idx) => (
-                  <div key={idx} className="flex items-center gap-3 group cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-                      <HugeiconsIcon
-                        icon={Plant01Icon}
-                        size={18}
-                        className="text-blue-600 dark:text-blue-300"
-                      />
-                    </div>
-                    <div className="flex flex-col flex-1">
-                      <span className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">
-                        {path}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-foreground text-sm">Similar in {combination.track}</h3>
+                <Link
+                  href="/explore-tracks"
+                  className="text-xs text-blue-600 dark:text-blue-300 font-bold hover:underline"
+                >
+                  All
+                </Link>
+              </div>
+              <div className="flex flex-col gap-3">
+                {[
+                  { name: "Biology, Chemistry, Physics", count: "120+ schools" },
+                  { name: "Biology, Chemistry, Agriculture", count: "95+ schools" },
+                  { name: "Chemistry, Physics, Computer Studies", count: "64+ schools" },
+                ].map((rel, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-muted transition-colors cursor-pointer group"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">
+                        {rel.name}
                       </span>
-                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
-                        Strong pathway
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        {rel.count}
                       </span>
                     </div>
                     <HugeiconsIcon

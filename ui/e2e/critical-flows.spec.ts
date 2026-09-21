@@ -75,36 +75,90 @@ async function mockApi(page: Page) {
             },
           });
         }
-        if (/\/api\/combinations\/[^/]+\/profile$/.test(pathname)) {
-          return json({
-            success: true,
-            data: {
-              found: true,
-              generated: false,
-              combination: {
-                id: ids.combo,
-                code: "PCB",
-                subjects: ["Biology", "Chemistry"],
-                track: "Pure Sciences",
-                pathway: "STEM",
-                schoolCount: 1,
+        const comboProfileMatch = pathname.match(/\/api\/combinations\/([^/]+)\/profile$/);
+        if (comboProfileMatch) {
+          const requestedId = comboProfileMatch[1];
+          if (requestedId === ids.combo) {
+            return json({
+              success: true,
+              data: {
+                found: true,
+                generated: false,
+                combination: {
+                  id: ids.combo,
+                  code: "PCB",
+                  subjects: ["Biology", "Chemistry"],
+                  track: "Pure Sciences",
+                  pathway: "STEM",
+                  schoolCount: 1,
+                },
+                profile: {
+                  id: "p1",
+                  combinationId: ids.combo,
+                  overview: "Health sciences pathway",
+                  bestFor: "Science learners",
+                  difficultyLevel: "Medium",
+                  careerPathways: ["Medicine"],
+                  keyBenefits: ["Strong science base"],
+                  subjectDetails: [],
+                  generatedBy: "test",
+                  promptVersion: "test",
+                  createdAt: "",
+                  updatedAt: "",
+                },
               },
-              profile: {
-                id: "p1",
-                combinationId: ids.combo,
-                overview: "Health sciences pathway",
-                bestFor: "Science learners",
-                difficultyLevel: "Medium",
-                      careerPathways: ["Medicine"],
-                keyBenefits: ["Strong science base"],
-                subjectDetails: [],
-                generatedBy: "test",
-                promptVersion: "test",
-                createdAt: "",
-                updatedAt: "",
+            });
+          }
+
+          if (requestedId === "00000000-0000-4000-8000-000000000302") {
+            if (url.includes("generate=true")) {
+              return json({
+                success: true,
+                data: {
+                  found: true,
+                  generated: true,
+                  combination: {
+                    id: "00000000-0000-4000-8000-000000000302",
+                    code: "PCM",
+                    subjects: ["Physics", "Chemistry", "Mathematics"],
+                    track: "Pure Sciences",
+                    pathway: "STEM",
+                    schoolCount: 1,
+                  },
+                  profile: {
+                    id: "p2",
+                    combinationId: "00000000-0000-4000-8000-000000000302",
+                    overview: "Engineering and physical sciences pathway",
+                    bestFor: "Analytical minds",
+                    difficultyLevel: "High",
+                    careerPathways: ["Engineering", "Data Science"],
+                    keyBenefits: ["Broad technical foundation"],
+                    subjectDetails: [],
+                    generatedBy: "test",
+                    promptVersion: "test",
+                    createdAt: "",
+                    updatedAt: "",
+                  },
+                },
+              });
+            }
+
+            return json(
+              {
+                success: false,
+                message: `No profile found for combination '${requestedId}'. Add ?generate=true to generate one.`,
               },
+              404,
+            );
+          }
+
+          return json(
+            {
+              success: false,
+              message: `Combination with id '${requestedId}' not found.`,
             },
-          });
+            404,
+          );
         }
         if (/\/api\/track-profiles\/[^/]+$/.test(pathname)) {
           return json({
@@ -441,9 +495,21 @@ test("combination detail with profile", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Schools Offering/ })).toBeVisible();
 });
 
-test("combination detail pending state without profile", async ({ page }) => {
+test("combination detail pending state and profile generation", async ({ page }) => {
   await page.goto("/combination/00000000-0000-4000-8000-000000000302");
-  await expect(page.getByText(/Generate Profile Insights/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Generate Profile Insights/i })).toBeVisible();
+
+  // Click generate insights
+  await page.getByRole("button", { name: /Generate Profile Insights/i }).click();
+
+  // If in dev verification mode, continue through turnstile
+  const continueBtn = page.getByRole("button", { name: /^Continue$/i });
+  if (await continueBtn.isVisible()) {
+    await continueBtn.click();
+  }
+
+  // Expect generated profile details to be rendered
+  await expect(page.getByText("Engineering and physical sciences pathway")).toBeVisible();
 });
 
 test("nonexistent combination returns 404", async ({ page }) => {

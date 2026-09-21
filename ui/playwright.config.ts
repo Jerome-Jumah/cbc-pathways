@@ -9,7 +9,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "node e2e/mock-api-server.mjs",
+      command: "npx tsx e2e/mock-api-server.ts",
       url: "http://127.0.0.1:8080/api/track-profiles",
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,

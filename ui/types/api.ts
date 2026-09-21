@@ -195,6 +195,12 @@ export interface NewSchoolCombinationsResponse {
 
 // ─── Combination Profile ──────────────────────────────────────────────────────
 
+export interface SubjectDetailItem {
+  subject: string;
+  importance?: string;
+  skillsGained?: string[];
+}
+
 export interface CombinationProfile {
   id: string;
   combinationId: string;
@@ -203,7 +209,7 @@ export interface CombinationProfile {
   difficultyLevel: string | null;
   careerPathways: string[];
   keyBenefits: string[];
-  subjectDetails: Record<string, unknown> | null;
+  subjectDetails: SubjectDetailItem[] | null;
   generatedBy: string;
   promptVersion: string;
   createdAt: string;

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { COUNTY_OPTIONS } from "@/constants/filter-options"
+import { useHumanVerification } from "@/context/human-verification-context"
 import { ApiError, apiPost, buildQuery } from "@/lib/api-client"
 import type { RecommendationResult, RecommendationResponse } from "@/types/api"
 import { ArrowRight01Icon, Building03Icon, InformationCircleIcon, Search01Icon } from "@hugeicons/core-free-icons"
@@ -27,9 +28,13 @@ function RecommendationResultsInner() {
   const county = searchParams.get("county") ?? undefined
   const gender = searchParams.get("gender") ?? undefined
 
-  const [humanVerified, setHumanVerified] = useState(false)
-  const [verificationError, setVerificationError] = useState<string | null>(null)
-  const [verificationLoading, setVerificationLoading] = useState(false)
+  const {
+    isHumanVerified,
+    isVerifying: verificationLoading,
+    verificationError,
+    verifyHuman,
+  } = useHumanVerification()
+
   const [results, setResults] = useState<RecommendationResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -69,32 +74,16 @@ function RecommendationResultsInner() {
   }, [county, gender, subjects])
 
   useEffect(() => {
-    void apiPost<{ success: boolean; data: { verifiedHuman: boolean } }>("/session/init", {})
-      .then((res) => setHumanVerified(res.data.verifiedHuman))
-      .catch(() => undefined)
-  }, [])
-
-  useEffect(() => {
-    if (humanVerified) {
+    if (isHumanVerified) {
       queueMicrotask(() => {
         void fetchRecommendations()
       })
     }
-  }, [fetchRecommendations, humanVerified])
+  }, [fetchRecommendations, isHumanVerified])
 
-  const verifyHuman = async (token: string) => {
-    setVerificationLoading(true)
-    setVerificationError(null)
-
-    try {
-      await apiPost<{ success: boolean; data: { verifiedHuman: boolean } }>("/security/verify-human", { token })
-      setHumanVerified(true)
-    } catch (err) {
-      setVerificationError(err instanceof ApiError ? err.message : "Human verification failed. Please try again.")
-    } finally {
-      setVerificationLoading(false)
-    }
-  }
+  const handleVerify = useCallback(async (token: string) => {
+    await verifyHuman(token)
+  }, [verifyHuman])
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col items-center pb-24">
@@ -119,16 +108,14 @@ function RecommendationResultsInner() {
           </Card>
         )}
 
-        {subjects.length > 0 && !humanVerified && (
+        {subjects.length > 0 && !isHumanVerified && (
           <Card className="mx-auto flex w-full max-w-xl flex-col items-center rounded-2xl border-border p-6 text-center shadow-sm">
             <h2 className="mb-2 text-lg font-bold text-foreground">Verify to load shared results</h2>
             <p className="mb-5 text-sm font-medium text-muted-foreground">
               This regenerates the recommendation safely from the shared inputs.
             </p>
             <TurnstileWidget
-              onVerify={verifyHuman}
-              onExpire={() => setVerificationError("Verification expired. Please try again.")}
-              onError={() => setVerificationError("Verification could not load. Please try again.")}
+              onVerify={handleVerify}
               className="w-full"
             />
             {verificationLoading && <p className="mt-3 text-sm font-medium text-muted-foreground">Verifying…</p>}
@@ -136,14 +123,14 @@ function RecommendationResultsInner() {
           </Card>
         )}
 
-        {humanVerified && loading && (
+        {isHumanVerified && loading && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-10 h-10 border-4 border-blue-200 dark:border-blue-800/50 border-t-blue-600 rounded-full animate-spin mb-4" />
             <p className="text-sm font-medium text-muted-foreground">Regenerating recommendations…</p>
           </div>
         )}
 
-        {humanVerified && !loading && error && (
+        {isHumanVerified && !loading && error && (
           <Card className="rounded-2xl border-border p-8 text-center">
             <HugeiconsIcon icon={InformationCircleIcon} className="mx-auto mb-3 text-red-500" />
             <p className="font-bold text-foreground">Could not load recommendations</p>
@@ -154,7 +141,7 @@ function RecommendationResultsInner() {
           </Card>
         )}
 
-        {humanVerified && !loading && results && (
+        {isHumanVerified && !loading && results && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="flex flex-col p-6 rounded-2xl border-border shadow-sm">
@@ -179,9 +166,7 @@ function RecommendationResultsInner() {
                             subtitle: `${combo.track.name} · ${combo._count.Schools} schools`,
                             href: `/combination/${combo.id}`,
                           }}
-                          showLabel={false}
-                          variant="ghost"
-                          className="mr-2 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-300"
+                          className="mr-2"
                         />
                       </div>
                     )
@@ -199,32 +184,37 @@ function RecommendationResultsInner() {
                       </div>
                       <div className="flex flex-col flex-1 min-w-0">
                         <span className="text-sm font-bold text-foreground truncate">{school.name}</span>
-                        <span className="text-xs text-muted-foreground font-medium">{school.county}{school.category ? ` · ${school.category}` : ""}</span>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          {school.county}{school.category ? ` · ${school.category}` : ""}
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
-                <Button asChild variant="outline" className="mt-6 w-full rounded-xl border-border text-blue-600 dark:text-blue-300">
-                  <Link href={exploreMoreSchoolsHref}>
-                    Explore more schools <HugeiconsIcon icon={ArrowRight01Icon} data-icon="inline-end" />
-                  </Link>
-                </Button>
               </Card>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <ShareButton
-                title="CBC Pathways recommendation results"
-                text="Open these CBC subject recommendation inputs."
-                url={shareHref}
-                label="Share Results"
-                className="w-full sm:w-auto rounded-xl border-border text-blue-600 dark:text-blue-300"
-              />
-              <Button asChild className="w-full sm:w-auto rounded-xl bg-blue-600 text-white hover:bg-blue-700">
-                <Link href="/recommendations">
-                  <HugeiconsIcon icon={Search01Icon} data-icon="inline-start" /> Start New Search
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-card border border-border rounded-2xl shadow-sm">
+              <div className="flex flex-col gap-1 text-center sm:text-left">
+                <h3 className="font-bold text-foreground">Explore more matching schools</h3>
+                <p className="text-sm text-muted-foreground">Find schools tailored to your selected subjects, tracks, and county preferences.</p>
+              </div>
+              <Button asChild className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 px-6 shrink-0 w-full sm:w-auto">
+                <Link href={exploreMoreSchoolsHref} className="flex items-center gap-2">
+                  <HugeiconsIcon icon={Search01Icon} size={16} />
+                  <span>Find More Schools</span>
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
                 </Link>
               </Button>
+            </div>
+
+            <div className="flex justify-center mt-2">
+              <ShareButton
+                title="My CBC Pathway Recommendations"
+                text="Check out my recommended CBC Senior School tracks, subject combinations, and schools on CBC Pathways!"
+                url={shareHref}
+                className="rounded-xl font-bold"
+              />
             </div>
           </>
         )}
@@ -235,7 +225,12 @@ function RecommendationResultsInner() {
 
 export default function RecommendationResultsPage() {
   return (
-    <Suspense>
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-4 border-blue-200 dark:border-blue-800/50 border-t-blue-600 rounded-full animate-spin mb-4" />
+        <p className="text-sm font-medium text-muted-foreground">Loading results…</p>
+      </div>
+    }>
       <RecommendationResultsInner />
     </Suspense>
   )
