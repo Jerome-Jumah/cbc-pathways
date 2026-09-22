@@ -9,6 +9,7 @@ describe("SchoolCard", () => {
       <SchoolCard
         school={{
           id: "00000000-0000-4000-8000-000000000001",
+          slug: "nairobi-senior-school",
           rank: 1,
           name: "Nairobi Senior School",
           location: "NAIROBI",
@@ -20,7 +21,7 @@ describe("SchoolCard", () => {
       />,
     );
 
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/school/00000000-0000-4000-8000-000000000001");
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/schools/nairobi-senior-school");
     expect(screen.getByText("Nairobi Senior School")).toBeInTheDocument();
     expect(screen.getByText("NAIROBI")).toBeInTheDocument();
     expect(screen.getByText("C2")).toBeInTheDocument();
@@ -35,6 +36,7 @@ describe("SchoolCard", () => {
       <SchoolCard
         school={{
           id: "00000000-0000-4000-8000-000000000002",
+          slug: "coast-senior-school",
           rank: 2,
           name: "Coast Senior School",
           location: "MOMBASA",

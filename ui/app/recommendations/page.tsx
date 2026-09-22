@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { COUNTY_OPTIONS } from "@/constants/filter-options"
 import { useHumanVerification } from "@/context/human-verification-context"
 import { ApiError, apiPost, buildQuery } from "@/lib/api-client"
+import { trackEvent } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 import type { RecommendationResult } from "@/types/api"
 import {
@@ -32,7 +33,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from 'next/link'
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 const SUBJECTS = [
   { id: "biology", label: "Biology", icon: Plant01Icon, color: "text-green-600 border-green-200", bg: "bg-green-50" },
@@ -62,6 +63,7 @@ const INTERESTS = [
 export default function RecommendationsPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const recommendationStarted = useRef(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [preferences, setPreferences] = useState({
     location: "",
@@ -86,9 +88,11 @@ export default function RecommendationsPage() {
   } = useHumanVerification();
 
   const toggleSubject = (id: string) => {
-    setSelectedSubjects(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
+    if (!recommendationStarted.current && !selectedSubjects.includes(id)) {
+      recommendationStarted.current = true;
+      trackEvent("recommendation_started");
+    }
+    setSelectedSubjects(prev => prev.includes(id) ? prev.filter(subject => subject !== id) : [...prev, id]);
   };
 
   const toggleInterest = (id: string) => {
@@ -125,6 +129,10 @@ export default function RecommendationsPage() {
         body
       );
       setRecResults(res.data);
+      trackEvent("recommendation_completed", {
+        pathwayCount: res.data?.pathwayRecommendations?.length ?? 0,
+        schoolCount: res.data?.schoolOptions?.length ?? 0,
+      });
     } catch (err) {
       setRecError(err instanceof ApiError ? err.message : "Failed to get recommendations.");
     } finally {
@@ -146,6 +154,10 @@ export default function RecommendationsPage() {
         );
         setRecResults(recommendations.data);
         setRecError(null);
+        trackEvent("recommendation_completed", {
+          pathwayCount: recommendations.data?.pathwayRecommendations?.length ?? 0,
+          schoolCount: recommendations.data?.schoolOptions?.length ?? 0,
+        });
       } catch (err) {
         setRecError(err instanceof ApiError ? err.message : "Failed to get recommendations.");
       } finally {
@@ -155,6 +167,7 @@ export default function RecommendationsPage() {
   }, [preferences.location, preferredSubjects, verifyHuman]);
 
   const handleNext = () => {
+    trackEvent("recommendation_step_completed", { step: currentStep });
     if (currentStep === 3) {
       setCurrentStep(4);
       if (isHumanVerified) void fetchRecommendations();
@@ -164,6 +177,7 @@ export default function RecommendationsPage() {
   };
   const handleBack = () => setCurrentStep(prev => Math.max(1, prev - 1));
   const handleReset = () => {
+    recommendationStarted.current = false;
     setCurrentStep(1);
     setSelectedSubjects([]);
     setSelectedInterests([]);

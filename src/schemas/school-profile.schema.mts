@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 export const schoolProfileParamsSchema = z.object({
-  schoolId: z.string().min(32),
+  schoolId: z.string().regex(/^[a-f0-9]{64}$/i, "School ID must be a 64-character SHA-256 hex value."),
+});
+
+export const schoolSlugParamsSchema = z.object({
+  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "School slug must contain lowercase letters, numbers, and single hyphens."),
 });
 
 export const upsertSchoolProfileBodySchema = z.object({

@@ -14,7 +14,7 @@ const school: SavedItem = {
   type: "school",
   title: "Alliance High School",
   subtitle: "Nairobi",
-  href: "/school/school-1",
+  href: "/schools/alliance-high-school",
   savedAt: "2026-05-04T00:00:00.000Z",
 }
 

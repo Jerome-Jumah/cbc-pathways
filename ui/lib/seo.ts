@@ -3,9 +3,11 @@
  * Centralised helpers for building consistent metadata across pages.
  */
 
+import { requireSiteOrigin } from "./config";
+
 export const siteConfig = {
   name: "CBC Pathways",
-  url: "https://cbc-pathways.code4flare.com",
+  url: requireSiteOrigin(process.env.NEXT_PUBLIC_SITE_URL),
   description:
     "Explore CBC senior school pathways, subject combinations, tracks, and schools in Kenya. Find the right combination and schools based on your interests, subjects, and preferences.",
   keywords: [

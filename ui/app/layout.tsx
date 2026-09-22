@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { HumanVerificationDialog } from "@/components/security/human-verification-dialog";
 import { HumanVerificationProvider } from "@/context/human-verification-context";
+import { UmamiScript } from "@/components/analytics/umami-script";
+import { getUmamiConfig } from "@/lib/config";
 import { siteConfig } from "@/lib/seo";
 import "./globals.css";
 
@@ -91,6 +93,11 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const umamiConfig = getUmamiConfig(
+    process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
+    process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL,
+  );
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${georgia.variable} antialiased`}>
@@ -156,6 +163,7 @@ export default function RootLayout({
           </div>
         </footer>
         <MobileBottomNav />
+        <UmamiScript config={umamiConfig} />
         {/* Vercel Web Analytics — zero config page-view tracking */}
         <Analytics />
       </body>

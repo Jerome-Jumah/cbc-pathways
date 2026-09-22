@@ -2,7 +2,7 @@ import http, { type IncomingMessage, type ServerResponse } from "node:http";
 
 const ids = {
   track: "00000000-0000-4000-8000-000000000101",
-  school: "00000000-0000-4000-8000-000000000201",
+  school: "0".repeat(63) + "1",
   combo: "00000000-0000-4000-8000-000000000301",
 };
 
@@ -48,12 +48,13 @@ export const server = http.createServer((req: IncomingMessage, res: ServerRespon
   }
 
   // School profile
-  if (/\/api\/schools\/[^/]+\/profile$/.test(pathname)) {
+  if (/\/api\/schools\/(?:by-slug\/)?[^/]+\/profile$/.test(pathname)) {
     return json({
       success: true,
       data: {
         school: {
           id: ids.school,
+          slug: "nairobi-senior-school",
           name: "Nairobi Senior School",
           county: "NAIROBI",
           cluster: "C2",
@@ -72,11 +73,12 @@ export const server = http.createServer((req: IncomingMessage, res: ServerRespon
   }
 
   // School combinations
-  if (/\/api\/schools\/[^/]+\/combinations$/.test(pathname)) {
+  if (/\/api\/schools\/(?:by-slug\/)?[^/]+\/combinations$/.test(pathname)) {
     return json({
       success: true,
       data: {
         schoolId: ids.school,
+        schoolSlug: "nairobi-senior-school",
         schoolName: "Nairobi Senior School",
         totalCombinations: 1,
         byTrack: [
@@ -259,6 +261,7 @@ export const server = http.createServer((req: IncomingMessage, res: ServerRespon
         data: [
           {
             id: ids.school,
+            slug: "nairobi-senior-school",
             name: "Nairobi Senior School",
             county: "NAIROBI",
             cluster: "C2",

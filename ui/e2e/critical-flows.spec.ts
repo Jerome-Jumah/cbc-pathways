@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const ids = {
   track: "00000000-0000-4000-8000-000000000101",
-  school: "00000000-0000-4000-8000-000000000201",
+  school: "0".repeat(63) + "1",
   combo: "00000000-0000-4000-8000-000000000301",
 };
 
@@ -30,12 +30,13 @@ async function mockApi(page: Page) {
             },
           });
         }
-        if (/\/api\/schools\/[^/]+\/profile$/.test(pathname)) {
+        if (/\/api\/schools\/(by-slug\/)?[^/]+\/profile$/.test(pathname)) {
           return json({
             success: true,
             data: {
               school: {
                 id: ids.school,
+                slug: "nairobi-senior-school",
                 name: "Nairobi Senior School",
                 county: "NAIROBI",
                 cluster: "C2",
@@ -49,11 +50,12 @@ async function mockApi(page: Page) {
             },
           });
         }
-        if (/\/api\/schools\/[^/]+\/combinations$/.test(pathname)) {
+        if (/\/api\/schools\/(by-slug\/)?[^/]+\/combinations$/.test(pathname)) {
           return json({
             success: true,
             data: {
               schoolId: ids.school,
+              schoolSlug: "nairobi-senior-school",
               schoolName: "Nairobi Senior School",
               totalCombinations: 1,
               byTrack: [
@@ -230,6 +232,7 @@ async function mockApi(page: Page) {
               data: [
                 {
                   id: ids.school,
+                  slug: "nairobi-senior-school",
                   name: "Nairobi Senior School",
                   county: "NAIROBI",
                   cluster: "C2",
@@ -270,13 +273,14 @@ async function mockApi(page: Page) {
     const url = new URL(route.request().url());
     if (!url.pathname.includes("/api/")) return route.continue();
 
-    if (/\/api\/schools\/[^/]+\/profile$/.test(url.pathname)) {
+    if (/\/api\/schools\/(?:by-slug\/)?[^/]+\/profile$/.test(url.pathname)) {
       return route.fulfill({
         json: {
           success: true,
           data: {
             school: {
               id: ids.school,
+              slug: "nairobi-senior-school",
               name: "Nairobi Senior School",
               county: "NAIROBI",
               cluster: "C2",
@@ -291,12 +295,13 @@ async function mockApi(page: Page) {
         },
       });
     }
-    if (/\/api\/schools\/[^/]+\/combinations$/.test(url.pathname)) {
+    if (/\/api\/schools\/(?:by-slug\/)?[^/]+\/combinations$/.test(url.pathname)) {
       return route.fulfill({
         json: {
           success: true,
           data: {
             schoolId: ids.school,
+            schoolSlug: "nairobi-senior-school",
             schoolName: "Nairobi Senior School",
             totalCombinations: 1,
             byTrack: [
@@ -429,6 +434,7 @@ async function mockApi(page: Page) {
             data: [
               {
                 id: ids.school,
+                slug: "nairobi-senior-school",
                 name: "Nairobi Senior School",
                 county: "NAIROBI",
                 cluster: "C2",
@@ -482,11 +488,16 @@ test("explore track", async ({ page }) => {
   await expect(page.getByText("Biology, Chemistry")).toBeVisible();
 });
 
-test("school detail", async ({ page }) => {
-  await page.goto("/school/00000000-0000-4000-8000-000000000201");
+test("school detail canonical", async ({ page }) => {
+  await page.goto("/schools/nairobi-senior-school");
   await expect(page.getByRole("heading", { name: /Tracks Offered/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "Tracks Offered" }).first().click();
   await expect(page.getByRole("heading", { name: "Pure Sciences" })).toBeVisible();
+});
+
+test("school detail legacy redirect", async ({ page }) => {
+  await page.goto(`/school/${ids.school}`);
+  await expect(page).toHaveURL("/schools/nairobi-senior-school");
 });
 
 test("combination detail with profile", async ({ page }) => {

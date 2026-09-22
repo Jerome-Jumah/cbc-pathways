@@ -35,6 +35,7 @@ export interface CombinationRef {
 
 export interface School {
   id: string;
+  slug: string;
   name: string;
   county: string;
   cluster: string | null;
@@ -68,6 +69,7 @@ export interface SchoolProfile {
 export interface SchoolProfileData {
   school: {
     id: string;
+    slug: string;
     name: string;
     county: string;
     cluster: string | null;
@@ -182,6 +184,7 @@ export interface SchoolCombinationsByTrack {
 
 export interface SchoolCombinationsData {
   schoolId: string;
+  schoolSlug: string;
   schoolName: string;
   totalCombinations: number;
   byTrack: SchoolCombinationsByTrack[];

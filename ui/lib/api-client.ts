@@ -1,10 +1,12 @@
+import { requireApiBaseUrl } from "@/lib/config";
+
 /**
  * API Client
  * Centralised fetch utilities for the CBC Pathways frontend.
  * Reads NEXT_PUBLIC_API_BASE_URL from the environment.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api";
+const BASE_URL = requireApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL, "NEXT_PUBLIC_API_BASE_URL");
 
 // ─── Error type ───────────────────────────────────────────────────────────────
 

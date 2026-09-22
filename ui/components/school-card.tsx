@@ -9,9 +9,12 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
+import { getSchoolUrl } from "@/lib/routes";
+import { trackEvent } from "@/lib/analytics";
 
 export interface School {
   id: string;
+  slug: string;
   rank: number;
   name: string;
   imageUrl?: string;
@@ -64,6 +67,8 @@ export function SchoolCard({ school }: SchoolCardProps) {
     C4: "text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800/50 bg-card",
   };
 
+  const schoolUrl = getSchoolUrl(school);
+
   // Get first 4 subjects and count the rest
   const visibleSubjects = school.subjects.slice(0, 4);
   const remainingSubjects = Math.max(0, school.subjects.length - 4);
@@ -73,13 +78,23 @@ export function SchoolCard({ school }: SchoolCardProps) {
       type: "school" as const,
       title: school.name,
       subtitle: `${school.location}${school.cluster ? ` · ${school.cluster.split(" ")[0]}` : ""}`,
-      href: `/school/${school.id}`,
+      href: schoolUrl,
     }),
-    [school.cluster, school.id, school.location, school.name],
+    [school.cluster, school.id, school.location, school.name, schoolUrl],
   );
 
+  const handleCardClick = () => {
+    trackEvent("school_result_opened", {
+      schoolSlug: school.slug,
+      county: school.location,
+      cluster: school.cluster ? school.cluster.split(" ")[0] : undefined,
+      gender: school.gender,
+      accommodation: school.accommodation,
+    });
+  };
+
   return (
-    <Link href={`/school/${school.id}`} className="block">
+    <Link href={schoolUrl} onClick={handleCardClick} className="block">
       <Card className="flex flex-col sm:flex-row p-4 gap-6 rounded-2xl hover:shadow-md transition-shadow border-border bg-card relative">
         {/* Image Section */}
         <div className="relative w-full sm:w-[240px] h-[160px] shrink-0 rounded-xl overflow-hidden bg-muted">

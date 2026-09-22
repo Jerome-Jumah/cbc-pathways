@@ -8,6 +8,8 @@ import { Bookmark01Icon, BookmarkCheck01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo } from "react"
 
+import { trackEvent } from "@/lib/analytics"
+
 type BookmarkButtonProps = {
   item: Omit<SavedItem, "savedAt">
   showLabel?: boolean
@@ -44,6 +46,13 @@ export function BookmarkButton({
       onClick={(event) => {
         event.preventDefault()
         event.stopPropagation()
+        if (item.type === "school") {
+          const match = /^\/schools\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(item.href);
+          if (!match) throw new Error(`Data integrity error: school bookmark has a non-canonical URL: ${item.href}`);
+          trackEvent("school_saved", { schoolSlug: match[1], saved: !saved });
+        } else if (item.type === "combination") {
+          trackEvent("combination_saved", { combinationId: item.id, saved: !saved });
+        }
         toggleSaved(savedItem)
       }}
     >

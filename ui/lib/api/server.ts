@@ -1,4 +1,5 @@
 import "server-only";
+import { requireApiBaseUrl } from "@/lib/config";
 
 import type {
   CombinationProfileData,
@@ -16,11 +17,6 @@ import type {
   TrackResponse,
   TracksResponse,
 } from "@/types/api";
-
-const BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://localhost:8080/api";
 
 export class ApiError extends Error {
   constructor(
@@ -63,7 +59,7 @@ async function serverFetch<T>(
   path: string,
   init?: RequestInit & { next?: { revalidate?: number | false; tags?: string[] } },
 ): Promise<T> {
-  const url = `${BASE_URL}${path}`;
+  const url = `${requireApiBaseUrl(process.env.API_BASE_URL, "API_BASE_URL")}${path}`;
 
   let res: Response;
   try {
@@ -103,15 +99,10 @@ async function serverFetch<T>(
  * Cached for 24 hours (86,400s) as track data is static.
  */
 export async function getTracks(): Promise<Track[]> {
-  try {
-    const res = await serverFetch<TracksResponse>("/track-profiles", {
-      next: { revalidate: 86400 },
-    });
-    return res.data ?? [];
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) return [];
-    throw err;
-  }
+  const res = await serverFetch<TracksResponse>("/track-profiles", {
+    next: { revalidate: 86400 },
+  });
+  return res.data;
 }
 
 /**
@@ -149,36 +140,22 @@ export interface GetCombinationsQuery {
 export async function getCombinations(
   query: GetCombinationsQuery = {},
 ): Promise<{ data: SubjectCombination[]; meta: PaginationMeta }> {
+  const qs = buildQuery(query as Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null>);
+  const res = await serverFetch<CombinationsListResponse>(`/combinations${qs}`, {
+    next: { revalidate: 3600 },
+  });
+  return {
+    data: res.data.data,
+    meta: res.data.meta,
+  };
+}
+
+/** Get a school profile through the ID endpoint. Cached for one hour. */
+export async function getSchoolProfileById(id: string): Promise<SchoolProfileData | null> {
   try {
-    const qs = buildQuery(query as Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null>);
-    const res = await serverFetch<CombinationsListResponse>(`/combinations${qs}`, {
+    const res = await serverFetch<SchoolProfileResponse>(`/schools/${encodeURIComponent(id)}/profile`, {
       next: { revalidate: 3600 },
     });
-    return {
-      data: res.data?.data ?? [],
-      meta: res.data?.meta ?? { total: 0, page: 1, limit: 20, totalPages: 1 },
-    };
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) {
-      return {
-        data: [],
-        meta: { total: 0, page: 1, limit: 20, totalPages: 1 },
-      };
-    }
-    throw err;
-  }
-}
-
-/**
- * Get full profile for a school.
- * Cached for 1 hour.
- */
-export async function getSchoolProfile(schoolId: string): Promise<SchoolProfileData | null> {
-  try {
-    const res = await serverFetch<SchoolProfileResponse>(
-      `/schools/${encodeURIComponent(schoolId)}/profile`,
-      { next: { revalidate: 3600 } },
-    );
     return res.data ?? null;
   } catch (err) {
     if (err instanceof ApiError && (err.status === 404 || err.status === 400)) {
@@ -188,23 +165,41 @@ export async function getSchoolProfile(schoolId: string): Promise<SchoolProfileD
   }
 }
 
-/**
- * Get all combinations offered by a school, grouped by track.
- * Cached for 1 hour.
- */
-export async function getSchoolCombinations(
-  schoolId: string,
-): Promise<SchoolCombinationsData | null> {
+export async function getSchoolProfileBySlug(slug: string): Promise<SchoolProfileData | null> {
   try {
-    const res = await serverFetch<NewSchoolCombinationsResponse>(
-      `/schools/${encodeURIComponent(schoolId)}/combinations`,
-      { next: { revalidate: 3600 } },
-    );
+    const res = await serverFetch<SchoolProfileResponse>(`/schools/by-slug/${encodeURIComponent(slug)}/profile`, {
+      next: { revalidate: 3600 },
+    });
+    return res.data ?? null;
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 404 || err.status === 400)) return null;
+    throw err;
+  }
+}
+
+/** Get a school's combinations through the ID endpoint, grouped by track. Cached for one hour. */
+export async function getSchoolCombinationsById(id: string): Promise<SchoolCombinationsData | null> {
+  try {
+    const res = await serverFetch<NewSchoolCombinationsResponse>(`/schools/${encodeURIComponent(id)}/combinations`, {
+      next: { revalidate: 3600 },
+    });
     return res.data ?? null;
   } catch (err) {
     if (err instanceof ApiError && (err.status === 404 || err.status === 400)) {
       return null;
     }
+    throw err;
+  }
+}
+
+export async function getSchoolCombinationsBySlug(slug: string): Promise<SchoolCombinationsData | null> {
+  try {
+    const res = await serverFetch<NewSchoolCombinationsResponse>(`/schools/by-slug/${encodeURIComponent(slug)}/combinations`, {
+      next: { revalidate: 3600 },
+    });
+    return res.data ?? null;
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 404 || err.status === 400)) return null;
     throw err;
   }
 }
@@ -265,22 +260,12 @@ export interface GetSchoolsQuery {
 export async function getSchools(
   query: GetSchoolsQuery = {},
 ): Promise<{ data: School[]; meta: PaginationMeta }> {
-  try {
-    const qs = buildQuery(query as Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null>);
-    const res = await serverFetch<SchoolsListResponse>(`/schools${qs}`, {
-      next: { revalidate: 600 },
-    });
-    return {
-      data: res.data?.data ?? [],
-      meta: res.data?.meta ?? { total: 0, page: 1, limit: 20, totalPages: 1 },
-    };
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) {
-      return {
-        data: [],
-        meta: { total: 0, page: 1, limit: 20, totalPages: 1 },
-      };
-    }
-    throw err;
-  }
+  const qs = buildQuery(query as Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null>);
+  const res = await serverFetch<SchoolsListResponse>(`/schools${qs}`, {
+    next: { revalidate: 600 },
+  });
+  return {
+    data: res.data.data,
+    meta: res.data.meta,
+  };
 }

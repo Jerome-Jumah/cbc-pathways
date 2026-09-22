@@ -131,12 +131,7 @@ const PATHWAY_EXPLANATIONS = [
 ];
 
 export default async function Grade10CombinationsPage() {
-  let tracks: Track[] = [];
-  try {
-    tracks = await getTracks();
-  } catch {
-    tracks = [];
-  }
+  const tracks: Track[] = await getTracks();
 
   const breadcrumbData = breadcrumbSchema([
     { name: "Home", url: siteConfig.url },

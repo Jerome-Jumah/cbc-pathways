@@ -1,14 +1,11 @@
 import { prisma } from "../db/client.mjs";
 
-/**
- * Get all subject combinations offered by a school (by school ID).
- * Groups combinations by track for easy frontend rendering.
- */
-export async function getSchoolCombinationsHandler(schoolId: string) {
+async function getSchoolCombinations(where: { id: string } | { slug: string }) {
   const school = await prisma.school.findUnique({
-    where: { id: schoolId },
+    where,
     select: {
       id: true,
+      slug: true,
       name: true,
       Combinations: {
         include: {
@@ -46,8 +43,17 @@ export async function getSchoolCombinationsHandler(schoolId: string) {
 
   return {
     schoolId: school.id,
+    schoolSlug: school.slug,
     schoolName: school.name,
     totalCombinations: school.Combinations.length,
     byTrack: Object.values(byTrack),
   };
+}
+
+export function getSchoolCombinationsByIdHandler(id: string) {
+  return getSchoolCombinations({ id });
+}
+
+export function getSchoolCombinationsBySlugHandler(slug: string) {
+  return getSchoolCombinations({ slug });
 }

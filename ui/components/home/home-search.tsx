@@ -35,6 +35,7 @@ const SUBJECT_OPTIONS_SELECT: Option[] = SUBJECT_OPTIONS.map((s) => ({
   value: s.value,
 }));
 
+
 export function HomeSearch() {
   const router = useRouter();
   const [subjects, setSubjects] = useState<string[]>([]);

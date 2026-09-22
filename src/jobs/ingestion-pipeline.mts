@@ -1,7 +1,8 @@
 import { prisma } from "../db/client.mjs";
 import { fetchSchoolsByCombination, fetchSubjectCombinations } from "../services/api-fetcher.mjs";
 import { parseSubjectCombinationsPDF } from "../services/pdf-parser.mjs";
-import { generateSchoolId, normalizeSubjects } from "../utils/normalizer.mjs";
+import { normalizeSubjects } from "../utils/normalizer.mjs";
+import { upsertSchoolsForCombination } from "../services/school-ingestion.mjs";
 import logger from "../constants/logger.mjs";
 import fs from "fs/promises";
 import path from "path";
@@ -138,32 +139,11 @@ export const runIngestionPipeline = async () => {
 
                 if (schoolsData.length === 0) break;
 
-                // ⚡ DATABASE BATCHING: Fire all 50 upserts simultaneously
-                const upsertPromises = schoolsData.map((schoolData: any) => {
-                  const schoolId = generateSchoolId(
-                    schoolData.senior_school_name || schoolData.name || "Unknown",
-                    schoolData.county || "Unknown",
-                    schoolData.cluster || "Unknown",
-                  );
-
-                  return prisma.school.upsert({
-                    where: { id: schoolId },
-                    update: { Combinations: { connect: { id: combo.id } } },
-                    create: {
-                      id: schoolId,
-                      name: schoolData.senior_school_name || schoolData.name || "Unknown",
-                      county: schoolData.county || "Unknown",
-                      cluster: schoolData.cluster || "Unknown",
-                      gender: schoolData.gender || "Unknown",
-                      category: schoolData.category || "Unknown",
-                      accommodationType: schoolData.accomodation_type || schoolData.accommodation_type || "Unknown",
-                      Combinations: { connect: { id: combo.id } },
-                    },
-                  });
-                });
-
-                // Wait for all 50 database writes to finish before getting the next page
-                await Promise.all(upsertPromises);
+                await upsertSchoolsForCombination(
+                  schoolsData,
+                  combo.id,
+                  `Ingestion for combination ${combo.subject_combination_code}, page ${page}`,
+                );
 
                 // Safely determine if there are more pages
                 let total = page * limit + 1;
@@ -185,7 +165,7 @@ export const runIngestionPipeline = async () => {
               logger.info(`💾 Saved state: ${combo.subject_combination_code} completed.`);
             } catch (comboError) {
               // ☠️ DEAD LETTER: If Axios failed 10 times, or the DB crashed, log it and move on.
-              logger.error(`❌ FAILED completely: ${combo.subject_combination_code}. Skipping to next.`);
+              logger.error(`❌ FAILED completely: ${combo.subject_combination_code}. ${String(comboError)}. Skipping to next.`);
               failedCombinations.add(combo.id);
               await saveState(FAILED_FILE, failedCombinations);
             }
