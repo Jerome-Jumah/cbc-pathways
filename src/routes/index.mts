@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { getCombinationProfileController } from "../controllers/combination-profile.controller.mjs";
 import { getRecommendations } from "../controllers/recommendation.mjs";
-import { getSchoolProfileController, upsertSchoolProfileController } from "../controllers/school-profile.controller.mjs";
+import { getSchoolProfileController, getSchoolProfileBySlugController, upsertSchoolProfileController } from "../controllers/school-profile.controller.mjs";
 import { getCombinationsBySchool, getCombinationsBySubjects, getSchools } from "../controllers/schools.mjs";
 import { getAllTrackProfiles, getTrackProfileById } from "../controllers/track-profiles.mjs";
 import { runValidation } from "../controllers/validation.mjs";
 import { getCombinations } from "../controllers/combinations.controller.mjs";
-import { getSchoolCombinations } from "../controllers/school-combinations.controller.mjs";
+import { getSchoolCombinations, getSchoolCombinationsBySlug } from "../controllers/school-combinations.controller.mjs";
 import {
   createSchoolEnrichmentJobController,
   listSchoolEnrichmentJobsController,
@@ -22,6 +22,8 @@ const routes = Router();
 routes.post("/session/init", initSession);
 routes.post("/security/verify-human", verifyHuman);
 routes.get("/schools", getSchools);
+routes.get("/schools/by-slug/:slug/combinations", getSchoolCombinationsBySlug);
+routes.get("/schools/by-slug/:slug/profile", getSchoolProfileBySlugController);
 routes.get("/schools/:schoolId/combinations", getSchoolCombinations);
 routes.get("/schools/:schoolId/profile", getSchoolProfileController);
 routes.put("/schools/:schoolId/profile", upsertSchoolProfileController);

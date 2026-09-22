@@ -150,10 +150,11 @@ describe("schools", () => {
     assert.equal(invalid.res.status, 400);
     assertSafeError(invalid.body);
 
-    const missing = await request("/api/schools/00000000-0000-4000-8000-000000000000/profile");
+    const missing = await request(`/api/schools/${"0".repeat(64)}/profile`);
     assert.equal(missing.res.status, 404);
     assertSafeError(missing.body);
   });
+
 });
 
 describe("combinations", () => {

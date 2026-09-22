@@ -44,6 +44,7 @@ model SubjectCombination {
 
 model School {
   id                String               @id // SHA256 of name+county+cluster
+  slug              String               @unique
   name              String
   county            String
   cluster           String

@@ -1,7 +1,7 @@
 import logger from "./constants/logger.mjs";
 import { prisma } from "./db/client.mjs";
 import { fetchSchoolsByCombination } from "./services/api-fetcher.mjs";
-import { generateSchoolId } from "./utils/normalizer.mjs";
+import { upsertSchoolsForCombination } from "./services/school-ingestion.mjs";
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -50,31 +50,7 @@ export const retryFailedCombinations = async () => {
           break;
         }
 
-        // ⚡ DATABASE BATCHING WITH SHA256 HASHING
-        const upsertPromises = schoolsData.map((schoolData: any) => {
-          const schoolId = generateSchoolId(
-            schoolData.senior_school_name || schoolData.name || "Unknown",
-            schoolData.county || "Unknown",
-            schoolData.cluster || "Unknown",
-          );
-
-          return prisma.school.upsert({
-            where: { id: schoolId },
-            update: { Combinations: { connect: { id: comboId } } },
-            create: {
-              id: schoolId,
-              name: schoolData.senior_school_name || schoolData.name || "Unknown",
-              county: schoolData.county || "Unknown",
-              cluster: schoolData.cluster || "Unknown",
-              gender: schoolData.gender || "Unknown",
-              category: schoolData.category || "Unknown",
-              accommodationType: schoolData.accomodation_type || schoolData.accommodation_type || "Unknown",
-              Combinations: { connect: { id: comboId } },
-            },
-          });
-        });
-
-        await Promise.all(upsertPromises);
+        await upsertSchoolsForCombination(schoolsData, comboId, `Retry for combination ${comboId}, page ${page}`);
         schoolsAdded += schoolsData.length;
 
         // 🛡️ BULLETPROOF PAGINATION
@@ -103,4 +79,16 @@ export const retryFailedCombinations = async () => {
   logger.info("\n🎉 Surgical Retry Complete!");
 };
 
-retryFailedCombinations().then(() => process.exit(0));
+retryFailedCombinations()
+  .catch(error => {
+    logger.error(`Retry process failed: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    try {
+      await prisma.$disconnect();
+    } catch (error) {
+      logger.error(`Could not disconnect Prisma after retry: ${error instanceof Error ? error.message : String(error)}`);
+      process.exitCode = 1;
+    }
+  });

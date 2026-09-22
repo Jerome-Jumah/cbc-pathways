@@ -104,12 +104,7 @@ function getTrackStyle(name: string) {
 }
 
 export default async function ExploreTracksPage() {
-  let tracks: Track[] = [];
-  try {
-    tracks = await getTracks();
-  } catch {
-    tracks = [];
-  }
+  const tracks: Track[] = await getTracks();
 
   const trackCount = tracks.length > 0 ? tracks.length : 7;
   const breadcrumbData = breadcrumbSchema([

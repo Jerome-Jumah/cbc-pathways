@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { siteConfig } from "@/lib/seo";
 
 // Route segment config
 export const runtime = "edge";
@@ -115,7 +116,7 @@ export default async function Image() {
             fontSize: "18px",
           }}
         >
-          cbc-pathways.code4flare.com
+          {new URL(siteConfig.url).host}
         </div>
       </div>
     ),

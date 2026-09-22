@@ -35,6 +35,7 @@ export interface CombinationRef {
 
 export interface School {
   id: string;
+  slug: string;
   name: string;
   county: string;
   cluster: string | null;
@@ -68,6 +69,7 @@ export interface SchoolProfile {
 export interface SchoolProfileData {
   school: {
     id: string;
+    slug: string;
     name: string;
     county: string;
     cluster: string | null;
@@ -182,6 +184,7 @@ export interface SchoolCombinationsByTrack {
 
 export interface SchoolCombinationsData {
   schoolId: string;
+  schoolSlug: string;
   schoolName: string;
   totalCombinations: number;
   byTrack: SchoolCombinationsByTrack[];
@@ -195,6 +198,12 @@ export interface NewSchoolCombinationsResponse {
 
 // ─── Combination Profile ──────────────────────────────────────────────────────
 
+export interface SubjectDetailItem {
+  subject: string;
+  importance?: string;
+  skillsGained?: string[];
+}
+
 export interface CombinationProfile {
   id: string;
   combinationId: string;
@@ -203,7 +212,7 @@ export interface CombinationProfile {
   difficultyLevel: string | null;
   careerPathways: string[];
   keyBenefits: string[];
-  subjectDetails: Record<string, unknown> | null;
+  subjectDetails: SubjectDetailItem[] | null;
   generatedBy: string;
   promptVersion: string;
   createdAt: string;

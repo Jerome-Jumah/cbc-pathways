@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import sitemap from "@/app/sitemap";
+import { siteConfig } from "@/lib/seo";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -34,9 +35,10 @@ describe("sitemap pagination and resilience", () => {
           const totalPages = 11; // 11,000 schools
 
           if (page <= totalPages) {
-            // Generate 1,000 school ids for this page
+            // Generate 1,000 schools with canonical slugs for this page
             const schools = Array.from({ length: 1000 }, (_, i) => ({
               id: `school-${(page - 1) * 1000 + i + 1}`,
+              slug: `school-${(page - 1) * 1000 + i + 1}`,
             }));
             return Response.json({
               success: true,
@@ -61,11 +63,11 @@ describe("sitemap pagination and resilience", () => {
     );
 
     const entries = await sitemap();
-    const schoolUrls = entries.filter((e) => e.url.includes("/school/"));
+    const schoolUrls = entries.filter((e) => e.url.includes("/schools/"));
 
     // Confirms pagination did NOT truncate at 10,000 and reached 11,000
     expect(schoolUrls.length).toBe(11000);
-    expect(schoolUrls[10500].url).toBe("https://cbc-pathways.code4flare.com/school/school-10501");
+    expect(schoolUrls[10500].url).toBe(`${siteConfig.url}/schools/school-10501`);
   });
 
   it("includes combination records beyond the first page when pagination indicates more records", async () => {
@@ -84,7 +86,8 @@ describe("sitemap pagination and resilience", () => {
           const totalPages = 3;
 
           if (page <= totalPages) {
-            const combos = Array.from({ length: 100 }, (_, i) => ({
+            const count = page === 3 ? 50 : 100;
+            const combos = Array.from({ length: count }, (_, i) => ({
               id: `combo-p${page}-${i + 1}`,
             }));
             return Response.json({
@@ -115,28 +118,33 @@ describe("sitemap pagination and resilience", () => {
     const entries = await sitemap();
     const comboUrls = entries.filter((e) => e.url.includes("/combination/"));
 
-    expect(comboUrls.length).toBe(300);
+    expect(comboUrls.length).toBe(250);
     expect(comboUrls.some((e) => e.url.includes("combo-p2-"))).toBe(true);
     expect(comboUrls.some((e) => e.url.includes("combo-p3-"))).toBe(true);
   });
 
-  it("emits static entries without crashing if the API is offline", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => {
-        throw new Error("ECONNREFUSED localhost:8080");
-      }),
-    );
+  it("fails with an integrity error when a school is missing its canonical slug", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes("/track-profiles")) return Response.json({ data: [] });
+      if (url.includes("/combinations")) return Response.json({ data: { data: [], meta: { total: 0, totalPages: 0 } } });
+      if (url.includes("/schools")) {
+        return Response.json({ data: { data: [{ id: "school-1" }], meta: { total: 1, totalPages: 1 } } });
+      }
+      return Response.json({ data: [] });
+    }));
 
-    const entries = await sitemap();
-    expect(entries.length).toBe(6);
-    expect(entries.map((e) => e.url)).toEqual([
-      "https://cbc-pathways.code4flare.com",
-      "https://cbc-pathways.code4flare.com/grade-10-subject-combinations",
-      "https://cbc-pathways.code4flare.com/explore-tracks",
-      "https://cbc-pathways.code4flare.com/find-schools",
-      "https://cbc-pathways.code4flare.com/recommendations",
-      "https://cbc-pathways.code4flare.com/about",
-    ]);
+    await expect(sitemap()).rejects.toThrow(/school school-1 has no valid canonical slug/i);
+  });
+
+  it("does not return a partial sitemap when the school API is unavailable", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes("/schools")) return Response.json({}, { status: 503 });
+      if (url.includes("/combinations")) return Response.json({ data: { data: [], meta: { total: 0, totalPages: 0 } } });
+      return Response.json({ data: [] });
+    }));
+
+    await expect(sitemap()).rejects.toThrow(/could not load schools page 1.*503/i);
   });
 });

@@ -31,6 +31,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useState } from "react";
+import { getSchoolCanonicalUrl, getSchoolUrl } from "@/lib/routes";
 
 const TRACK_COLORS = [
   {
@@ -83,7 +84,7 @@ export function SchoolDetailsClient({
     type: "school" as const,
     title: school.name,
     subtitle: `${school.county}${school.cluster ? ` · ${school.cluster}` : ""}`,
-    href: `/school/${school.id}`,
+    href: getSchoolUrl(school),
   };
 
   return (
@@ -248,6 +249,7 @@ export function SchoolDetailsClient({
             <ShareButton
               title={school.name}
               text={`View ${school.name} CBC subject combinations and pathways.`}
+              url={getSchoolCanonicalUrl(school)}
               className="border-border text-foreground hover:bg-muted font-semibold rounded-xl h-11 px-6 shadow-sm"
             />
             <BookmarkButton

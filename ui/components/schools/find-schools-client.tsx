@@ -27,6 +27,7 @@ import { FilterIcon, RefreshIcon, Search02Icon } from "@hugeicons/core-free-icon
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 const LIMIT = 20;
 
@@ -41,6 +42,7 @@ function adaptSchool(s: School, index: number) {
 
   return {
     id: s.id,
+    slug: s.slug,
     rank: index + 1,
     name: s.name,
     imageUrl: undefined,
@@ -208,14 +210,31 @@ export function FindSchoolsClient({
       else setLoading(true);
       setError(null);
 
+      if (!append) {
+        trackEvent("school_search_started", {
+          county: selectedCounties[0] || undefined,
+          cluster: selectedClusters[0] || undefined,
+          gender: selectedGenders[0] !== "Any" ? selectedGenders[0] : undefined,
+          accommodation: selectedAccommodations[0] !== "Any" ? selectedAccommodations[0] : undefined,
+          subjectCount: initialSubjects.length,
+          page: p,
+        });
+      }
+
       try {
         const qs = buildApiQuery(p);
         const res = await apiGet<SchoolsListResponse>(`/schools${qs}`);
         const incoming = res.data?.data ?? [];
-        setTotal(res.data?.meta?.total ?? 0);
+        const resultCount = res.data?.meta?.total ?? 0;
+        setTotal(resultCount);
         setTotalPages(res.data?.meta?.totalPages ?? 1);
         setPage(p);
         setSchools((prev) => (append ? [...prev, ...incoming] : incoming));
+
+        trackEvent("school_search_completed", {
+          resultCount,
+          page: p,
+        });
       } catch (err) {
         const msg =
           err instanceof ApiError ? err.message : "Failed to load schools. Please try again.";
@@ -225,7 +244,7 @@ export function FindSchoolsClient({
         setLoadingMore(false);
       }
     },
-    [buildApiQuery],
+    [buildApiQuery, initialSubjects.length, selectedAccommodations, selectedClusters, selectedCounties, selectedGenders],
   );
 
   // ── Handle filter changes ──

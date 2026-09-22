@@ -9,7 +9,9 @@ import { Card } from "@/components/ui/card"
 import { TurnstileWidget } from "@/components/security/turnstile-widget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { COUNTY_OPTIONS } from "@/constants/filter-options"
+import { useHumanVerification } from "@/context/human-verification-context"
 import { ApiError, apiPost, buildQuery } from "@/lib/api-client"
+import { trackEvent } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 import type { RecommendationResult } from "@/types/api"
 import {
@@ -31,7 +33,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 const SUBJECTS = [
   { id: "biology", label: "Biology", icon: Plant01Icon, color: "text-green-600 border-green-200", bg: "bg-green-50" },
@@ -61,6 +63,7 @@ const INTERESTS = [
 export default function RecommendationsPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const recommendationStarted = useRef(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [preferences, setPreferences] = useState({
     location: "",
@@ -75,22 +78,21 @@ export default function RecommendationsPage() {
   const [recResults, setRecResults] = useState<RecommendationResult | null>(null);
   const [recLoading, setRecLoading] = useState(false);
   const [recError, setRecError] = useState<string | null>(null);
-  const [humanVerified, setHumanVerified] = useState(false);
-  const [verificationLoading, setVerificationLoading] = useState(false);
-  const [verificationError, setVerificationError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void apiPost<{ success: boolean; data: { verifiedHuman: boolean } }>("/session/init", {})
-      .then((res) => setHumanVerified(res.data.verifiedHuman))
-      .catch(() => {
-        // Public browsing still works; protected action will explain verification if needed.
-      });
-  }, []);
+  const {
+    isHumanVerified,
+    isVerifying: verificationLoading,
+    verificationError,
+    verifyHuman,
+    resetVerificationError,
+  } = useHumanVerification();
 
   const toggleSubject = (id: string) => {
-    setSelectedSubjects(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
+    if (!recommendationStarted.current && !selectedSubjects.includes(id)) {
+      recommendationStarted.current = true;
+      trackEvent("recommendation_started");
+    }
+    setSelectedSubjects(prev => prev.includes(id) ? prev.filter(subject => subject !== id) : [...prev, id]);
   };
 
   const toggleInterest = (id: string) => {
@@ -114,7 +116,7 @@ export default function RecommendationsPage() {
   }, [selectedSubjects]);
 
   const fetchRecommendations = useCallback(async () => {
-    if (!humanVerified) return;
+    if (!isHumanVerified) return;
     setRecLoading(true);
     setRecError(null);
     try {
@@ -127,53 +129,61 @@ export default function RecommendationsPage() {
         body
       );
       setRecResults(res.data);
+      trackEvent("recommendation_completed", {
+        pathwayCount: res.data?.pathwayRecommendations?.length ?? 0,
+        schoolCount: res.data?.schoolOptions?.length ?? 0,
+      });
     } catch (err) {
       setRecError(err instanceof ApiError ? err.message : "Failed to get recommendations.");
     } finally {
       setRecLoading(false);
     }
-  }, [humanVerified, preferredSubjects, preferences.location]);
+  }, [isHumanVerified, preferredSubjects, preferences.location]);
 
-  const verifyHuman = useCallback(async (token: string) => {
-    setVerificationLoading(true);
-    setVerificationError(null);
-    try {
-      const res = await apiPost<{ success: boolean; data: { verifiedHuman: boolean } }>("/security/verify-human", { token });
-      setHumanVerified(res.data.verifiedHuman);
-      if (res.data.verifiedHuman) {
-        setRecLoading(true);
+  const handleVerify = useCallback(async (token: string) => {
+    const verified = await verifyHuman(token);
+    if (verified) {
+      setRecLoading(true);
+      try {
         const countyOption = COUNTY_OPTIONS.find(c => c.value === preferences.location);
         const body: Record<string, unknown> = { preferredSubjects };
         if (countyOption) body.preferredCounty = countyOption.value;
-        const recommendations = await apiPost<{ status: string; data: RecommendationResult }>("/recommendations", body);
+        const recommendations = await apiPost<{ status: string; data: RecommendationResult }>(
+          "/recommendations",
+          body,
+        );
         setRecResults(recommendations.data);
         setRecError(null);
+        trackEvent("recommendation_completed", {
+          pathwayCount: recommendations.data?.pathwayRecommendations?.length ?? 0,
+          schoolCount: recommendations.data?.schoolOptions?.length ?? 0,
+        });
+      } catch (err) {
+        setRecError(err instanceof ApiError ? err.message : "Failed to get recommendations.");
+      } finally {
+        setRecLoading(false);
       }
-    } catch (err) {
-      setVerificationError(err instanceof ApiError ? err.message : "Human verification failed. Please try again.");
-      setRecError(err instanceof ApiError ? err.message : "Failed to get recommendations.");
-    } finally {
-      setVerificationLoading(false);
-      setRecLoading(false);
     }
-  }, [preferences.location, preferredSubjects]);
+  }, [preferences.location, preferredSubjects, verifyHuman]);
 
   const handleNext = () => {
+    trackEvent("recommendation_step_completed", { step: currentStep });
     if (currentStep === 3) {
       setCurrentStep(4);
-      if (humanVerified) void fetchRecommendations();
+      if (isHumanVerified) void fetchRecommendations();
     } else {
       setCurrentStep(prev => Math.min(4, prev + 1));
     }
   };
   const handleBack = () => setCurrentStep(prev => Math.max(1, prev - 1));
   const handleReset = () => {
+    recommendationStarted.current = false;
     setCurrentStep(1);
     setSelectedSubjects([]);
     setSelectedInterests([]);
     setRecResults(null);
     setRecError(null);
-    setVerificationError(null);
+    resetVerificationError();
     setPreferences({
       location: "",
       environment: "Co-ed",
@@ -661,16 +671,14 @@ export default function RecommendationsPage() {
                 <p className="text-lg font-medium text-muted-foreground">Based on your selected subjects and preferences.</p>
               </div>
 
-              {!humanVerified && (
+              {!isHumanVerified && (
                 <Card className="mx-auto mb-8 flex w-full max-w-xl flex-col items-center rounded-2xl border-border p-6 text-center shadow-sm">
                   <h2 className="mb-2 text-lg font-bold text-foreground">Verify to generate recommendations</h2>
                   <p className="mb-5 text-sm font-medium text-muted-foreground">
                     This protects the recommendation engine from automated abuse while keeping school browsing public.
                   </p>
                   <TurnstileWidget
-                    onVerify={verifyHuman}
-                    onExpire={() => setVerificationError("Verification expired. Please try again.")}
-                    onError={() => setVerificationError("Verification could not load. Please try again.")}
+                    onVerify={handleVerify}
                     className="w-full"
                   />
                   {verificationLoading && <p className="mt-3 text-sm font-medium text-muted-foreground">Verifying…</p>}
@@ -685,7 +693,7 @@ export default function RecommendationsPage() {
                 </div>
               )}
 
-              {humanVerified && !recLoading && recError && (
+              {isHumanVerified && !recLoading && recError && (
                 <div className="flex flex-col items-center justify-center py-12 bg-red-50 rounded-2xl border border-red-100 text-center mb-8">
                   <HugeiconsIcon icon={InformationCircleIcon} size={32} className="text-red-400 mb-3" />
                   <p className="font-bold text-red-700 mb-1">Could not load recommendations</p>
@@ -694,7 +702,7 @@ export default function RecommendationsPage() {
                 </div>
               )}
 
-              {humanVerified && !recLoading && !recError && recResults && (
+              {isHumanVerified && !recLoading && !recError && recResults && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <Card className="flex flex-col p-6 rounded-2xl border-border shadow-sm">
                     <h3 className="font-bold text-foreground mb-6">Recommended Combinations</h3>
@@ -764,7 +772,7 @@ export default function RecommendationsPage() {
                 </div>
               )}
 
-              {humanVerified && !recLoading && !recError && !recResults && (
+              {isHumanVerified && !recLoading && !recError && !recResults && (
                 <div className="flex flex-col items-center justify-center py-16 text-center mb-8">
                   <p className="text-muted-foreground text-sm">No results yet.</p>
                 </div>

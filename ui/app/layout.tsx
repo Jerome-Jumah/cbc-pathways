@@ -3,6 +3,10 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { HumanVerificationDialog } from "@/components/security/human-verification-dialog";
+import { HumanVerificationProvider } from "@/context/human-verification-context";
+import { UmamiScript } from "@/components/analytics/umami-script";
+import { getUmamiConfig } from "@/lib/config";
 import { siteConfig } from "@/lib/seo";
 import "./globals.css";
 
@@ -89,6 +93,11 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const umamiConfig = getUmamiConfig(
+    process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
+    process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL,
+  );
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${georgia.variable} antialiased`}>
@@ -105,7 +114,10 @@ export default function RootLayout({
             `,
           }}
         />
-        {children}
+        <HumanVerificationProvider>
+          {children}
+          <HumanVerificationDialog />
+        </HumanVerificationProvider>
         <footer className="w-full bg-card border-t border-border px-6 py-8 pb-24 md:pb-8 dark:border-border dark:bg-card">
           <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
             <p className="font-medium">
@@ -151,6 +163,7 @@ export default function RootLayout({
           </div>
         </footer>
         <MobileBottomNav />
+        <UmamiScript config={umamiConfig} />
         {/* Vercel Web Analytics — zero config page-view tracking */}
         <Analytics />
       </body>

@@ -1,16 +1,33 @@
 import { NextFunction, Request, Response } from "express";
-import { schoolProfileParamsSchema, upsertSchoolProfileBodySchema } from "../schemas/school-profile.schema.mjs";
-import { getSchoolProfileHandler, upsertSchoolProfileHandler } from "../handlers/school-profile.handler.mjs";
+import { schoolProfileParamsSchema, schoolSlugParamsSchema, upsertSchoolProfileBodySchema } from "../schemas/school-profile.schema.mjs";
+import { getSchoolProfileByIdHandler, getSchoolProfileBySlugHandler, upsertSchoolProfileHandler } from "../handlers/school-profile.handler.mjs";
 import { httpErrorHandler, STATUS_CODES } from "../constants/index.mjs";
 
 export async function getSchoolProfileController(req: Request, res: Response, next: NextFunction) {
   try {
     const { schoolId } = schoolProfileParamsSchema.parse(req.params);
 
-    const result = await getSchoolProfileHandler(schoolId);
+    const result = await getSchoolProfileByIdHandler(schoolId);
 
     if (!result) {
       httpErrorHandler(STATUS_CODES.NOT_FOUND, `School with id '${schoolId}' not found.`);
+      return;
+    }
+
+    res.status(STATUS_CODES.SUCCESS).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getSchoolProfileBySlugController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { slug } = schoolSlugParamsSchema.parse(req.params);
+
+    const result = await getSchoolProfileBySlugHandler(slug);
+
+    if (!result) {
+      httpErrorHandler(STATUS_CODES.NOT_FOUND, `School with slug '${slug}' not found.`);
       return;
     }
 

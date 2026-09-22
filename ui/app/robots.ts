@@ -17,6 +17,7 @@ export default function robots(): MetadataRoute.Robots {
           "/explore-tracks",
           "/explore-tracks/",
           "/find-schools",
+          "/schools/",
           "/school/",
           "/combination/",
           "/recommendations",

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const ids = {
   track: "00000000-0000-4000-8000-000000000101",
-  school: "00000000-0000-4000-8000-000000000201",
+  school: "0".repeat(63) + "1",
   combo: "00000000-0000-4000-8000-000000000301",
 };
 
@@ -30,12 +30,13 @@ async function mockApi(page: Page) {
             },
           });
         }
-        if (/\/api\/schools\/[^/]+\/profile$/.test(pathname)) {
+        if (/\/api\/schools\/(by-slug\/)?[^/]+\/profile$/.test(pathname)) {
           return json({
             success: true,
             data: {
               school: {
                 id: ids.school,
+                slug: "nairobi-senior-school",
                 name: "Nairobi Senior School",
                 county: "NAIROBI",
                 cluster: "C2",
@@ -49,11 +50,12 @@ async function mockApi(page: Page) {
             },
           });
         }
-        if (/\/api\/schools\/[^/]+\/combinations$/.test(pathname)) {
+        if (/\/api\/schools\/(by-slug\/)?[^/]+\/combinations$/.test(pathname)) {
           return json({
             success: true,
             data: {
               schoolId: ids.school,
+              schoolSlug: "nairobi-senior-school",
               schoolName: "Nairobi Senior School",
               totalCombinations: 1,
               byTrack: [
@@ -75,36 +77,90 @@ async function mockApi(page: Page) {
             },
           });
         }
-        if (/\/api\/combinations\/[^/]+\/profile$/.test(pathname)) {
-          return json({
-            success: true,
-            data: {
-              found: true,
-              generated: false,
-              combination: {
-                id: ids.combo,
-                code: "PCB",
-                subjects: ["Biology", "Chemistry"],
-                track: "Pure Sciences",
-                pathway: "STEM",
-                schoolCount: 1,
+        const comboProfileMatch = pathname.match(/\/api\/combinations\/([^/]+)\/profile$/);
+        if (comboProfileMatch) {
+          const requestedId = comboProfileMatch[1];
+          if (requestedId === ids.combo) {
+            return json({
+              success: true,
+              data: {
+                found: true,
+                generated: false,
+                combination: {
+                  id: ids.combo,
+                  code: "PCB",
+                  subjects: ["Biology", "Chemistry"],
+                  track: "Pure Sciences",
+                  pathway: "STEM",
+                  schoolCount: 1,
+                },
+                profile: {
+                  id: "p1",
+                  combinationId: ids.combo,
+                  overview: "Health sciences pathway",
+                  bestFor: "Science learners",
+                  difficultyLevel: "Medium",
+                  careerPathways: ["Medicine"],
+                  keyBenefits: ["Strong science base"],
+                  subjectDetails: [],
+                  generatedBy: "test",
+                  promptVersion: "test",
+                  createdAt: "",
+                  updatedAt: "",
+                },
               },
-              profile: {
-                id: "p1",
-                combinationId: ids.combo,
-                overview: "Health sciences pathway",
-                bestFor: "Science learners",
-                difficultyLevel: "Medium",
-                      careerPathways: ["Medicine"],
-                keyBenefits: ["Strong science base"],
-                subjectDetails: [],
-                generatedBy: "test",
-                promptVersion: "test",
-                createdAt: "",
-                updatedAt: "",
+            });
+          }
+
+          if (requestedId === "00000000-0000-4000-8000-000000000302") {
+            if (url.includes("generate=true")) {
+              return json({
+                success: true,
+                data: {
+                  found: true,
+                  generated: true,
+                  combination: {
+                    id: "00000000-0000-4000-8000-000000000302",
+                    code: "PCM",
+                    subjects: ["Physics", "Chemistry", "Mathematics"],
+                    track: "Pure Sciences",
+                    pathway: "STEM",
+                    schoolCount: 1,
+                  },
+                  profile: {
+                    id: "p2",
+                    combinationId: "00000000-0000-4000-8000-000000000302",
+                    overview: "Engineering and physical sciences pathway",
+                    bestFor: "Analytical minds",
+                    difficultyLevel: "High",
+                    careerPathways: ["Engineering", "Data Science"],
+                    keyBenefits: ["Broad technical foundation"],
+                    subjectDetails: [],
+                    generatedBy: "test",
+                    promptVersion: "test",
+                    createdAt: "",
+                    updatedAt: "",
+                  },
+                },
+              });
+            }
+
+            return json(
+              {
+                success: false,
+                message: `No profile found for combination '${requestedId}'. Add ?generate=true to generate one.`,
               },
+              404,
+            );
+          }
+
+          return json(
+            {
+              success: false,
+              message: `Combination with id '${requestedId}' not found.`,
             },
-          });
+            404,
+          );
         }
         if (/\/api\/track-profiles\/[^/]+$/.test(pathname)) {
           return json({
@@ -176,6 +232,7 @@ async function mockApi(page: Page) {
               data: [
                 {
                   id: ids.school,
+                  slug: "nairobi-senior-school",
                   name: "Nairobi Senior School",
                   county: "NAIROBI",
                   cluster: "C2",
@@ -216,13 +273,14 @@ async function mockApi(page: Page) {
     const url = new URL(route.request().url());
     if (!url.pathname.includes("/api/")) return route.continue();
 
-    if (/\/api\/schools\/[^/]+\/profile$/.test(url.pathname)) {
+    if (/\/api\/schools\/(?:by-slug\/)?[^/]+\/profile$/.test(url.pathname)) {
       return route.fulfill({
         json: {
           success: true,
           data: {
             school: {
               id: ids.school,
+              slug: "nairobi-senior-school",
               name: "Nairobi Senior School",
               county: "NAIROBI",
               cluster: "C2",
@@ -237,12 +295,13 @@ async function mockApi(page: Page) {
         },
       });
     }
-    if (/\/api\/schools\/[^/]+\/combinations$/.test(url.pathname)) {
+    if (/\/api\/schools\/(?:by-slug\/)?[^/]+\/combinations$/.test(url.pathname)) {
       return route.fulfill({
         json: {
           success: true,
           data: {
             schoolId: ids.school,
+            schoolSlug: "nairobi-senior-school",
             schoolName: "Nairobi Senior School",
             totalCombinations: 1,
             byTrack: [
@@ -375,6 +434,7 @@ async function mockApi(page: Page) {
             data: [
               {
                 id: ids.school,
+                slug: "nairobi-senior-school",
                 name: "Nairobi Senior School",
                 county: "NAIROBI",
                 cluster: "C2",
@@ -428,11 +488,16 @@ test("explore track", async ({ page }) => {
   await expect(page.getByText("Biology, Chemistry")).toBeVisible();
 });
 
-test("school detail", async ({ page }) => {
-  await page.goto("/school/00000000-0000-4000-8000-000000000201");
+test("school detail canonical", async ({ page }) => {
+  await page.goto("/schools/nairobi-senior-school");
   await expect(page.getByRole("heading", { name: /Tracks Offered/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "Tracks Offered" }).first().click();
   await expect(page.getByRole("heading", { name: "Pure Sciences" })).toBeVisible();
+});
+
+test("school detail legacy redirect", async ({ page }) => {
+  await page.goto(`/school/${ids.school}`);
+  await expect(page).toHaveURL("/schools/nairobi-senior-school");
 });
 
 test("combination detail with profile", async ({ page }) => {
@@ -441,9 +506,21 @@ test("combination detail with profile", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Schools Offering/ })).toBeVisible();
 });
 
-test("combination detail pending state without profile", async ({ page }) => {
+test("combination detail pending state and profile generation", async ({ page }) => {
   await page.goto("/combination/00000000-0000-4000-8000-000000000302");
-  await expect(page.getByText(/Generate Profile Insights/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Generate Profile Insights/i })).toBeVisible();
+
+  // Click generate insights
+  await page.getByRole("button", { name: /Generate Profile Insights/i }).click();
+
+  // If in dev verification mode, continue through turnstile
+  const continueBtn = page.getByRole("button", { name: /^Continue$/i });
+  if (await continueBtn.isVisible()) {
+    await continueBtn.click();
+  }
+
+  // Expect generated profile details to be rendered
+  await expect(page.getByText("Engineering and physical sciences pathway")).toBeVisible();
 });
 
 test("nonexistent combination returns 404", async ({ page }) => {

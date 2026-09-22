@@ -3,9 +3,9 @@ import { UpsertSchoolProfileInput } from "../schemas/school-profile.schema.mjs";
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
 
-export async function getSchoolProfileHandler(schoolId: string) {
+async function getSchoolProfile(where: { id: string } | { slug: string }) {
   const school = await prisma.school.findUnique({
-    where: { id: schoolId },
+    where,
     include: {
       profile: true,
       _count: { select: { Combinations: true } },
@@ -25,6 +25,7 @@ export async function getSchoolProfileHandler(schoolId: string) {
   return {
     school: {
       id: school.id,
+      slug: school.slug,
       name: school.name,
       county: school.county,
       cluster: school.cluster,
@@ -36,6 +37,14 @@ export async function getSchoolProfileHandler(schoolId: string) {
     },
     profile: school.profile,
   };
+}
+
+export function getSchoolProfileByIdHandler(id: string) {
+  return getSchoolProfile({ id });
+}
+
+export function getSchoolProfileBySlugHandler(slug: string) {
+  return getSchoolProfile({ slug });
 }
 
 // ─── UPSERT ──────────────────────────────────────────────────────────────────
